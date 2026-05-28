@@ -1,20 +1,75 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValue } from "framer-motion";
 import { 
   ArrowRight, Check, CheckCircle2, ChevronDown, Server,
   Zap, Cpu, Sparkles, Database, Lock, Globe, ArrowUpRight, 
-  Layers, Settings, Play, Cloud, ShieldAlert
+  Layers, Settings, Play, Cloud, ShieldAlert, ThumbsUp
 } from "lucide-react";
 
 export default function CloudSrePage() {
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
+  const [faqPage, setFaqPage] = useState(0);
+  const [faqInput, setFaqInput] = useState("");
+  const [faqSent, setFaqSent] = useState(false);
 
   const toggleFaq = (index) => {
     setOpenFaqIndex(openFaqIndex === index ? null : index);
   };
+
+  // Scroll targets for Success Stories Sticky animation
+  const successStoriesRef = useRef(null);
+  const scrollProgress = useMotionValue(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!successStoriesRef.current) return;
+      const rect = successStoriesRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const scrollHeight = rect.height - viewportHeight;
+      
+      let p = 0;
+      if (rect.top > 0) {
+        p = 0;
+      } else if (rect.bottom < viewportHeight) {
+        p = 1;
+      } else {
+        p = -rect.top / scrollHeight;
+      }
+      scrollProgress.set(p);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleScroll);
+    handleScroll(); // Run initially
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, [scrollProgress]);
+
+  // Scroll Mitosis Card division coordinates
+  const leftCardX = useTransform(scrollProgress, [0, 0.55], [0, -55]);
+  const rightCardX = useTransform(scrollProgress, [0, 0.55], [0, 55]);
+
+  // Inner border-radius morphing: goes from 0px (merged) to 24px (fully split)
+  const leftCardRadius = useTransform(scrollProgress, [0, 0.55], [0, 24]);
+  const rightCardRadius = useTransform(scrollProgress, [0, 0.55], [0, 24]);
+
+  // Inner border color fading in
+  const leftCardBorderColor = useTransform(scrollProgress, [0.15, 0.55], ["rgba(16, 185, 129, 0.02)", "rgba(16, 185, 129, 0.25)"]);
+  const rightCardBorderColor = useTransform(scrollProgress, [0.15, 0.55], ["rgba(16, 185, 129, 0.02)", "rgba(16, 185, 129, 0.25)"]);
+
+  // Inner content fade & scale
+  const innerOpacity = useTransform(scrollProgress, [0.35, 0.55], [0, 1]);
+  const innerScale = useTransform(scrollProgress, [0.35, 0.55], [0.95, 1]);
+
+  // Merged overlay fade & scale
+  const overlayOpacity = useTransform(scrollProgress, [0, 0.20], [1, 0]);
+  const overlayScale = useTransform(scrollProgress, [0, 0.20], [1, 0.9]);
 
   const approach = {
     migration: {
@@ -106,14 +161,24 @@ export default function CloudSrePage() {
   const successStories = [
     {
       title: "E-Commerce Platform Cloud Migration",
-      desc: "Migrated a legacy monolithic ERP infrastructure to multi-region cloud nodes with zero transactional downtime.",
-      solution: "Phased migration with blue-green deployment strategy and real-time database synchronizations.",
+      challenge: "Migrating legacy on-premise ERP infrastructure to the cloud with zero transactional downtime.",
+      solution: "A phased migration strategy with blue-green deployment gates and real-time active data synchronization.",
+      results: [
+        "Zero downtime during cutover phases",
+        "Active blue-green deployment waves",
+        "Real-time database sync pipelines"
+      ],
       borderColor: "border-blue-500/25"
     },
     {
       title: "SaaS Company Multi-Cloud Strategy",
-      desc: "Reduced platform vendor lock-in risk and optimized delivery speeds for globally distributed users.",
-      solution: "Engineered cloud-agnostic configurations utilizing containerized Kubernetes nodes managed by Terraform.",
+      challenge: "Reducing platform vendor lock-in risk and optimizing delivery latency for globally distributed users.",
+      solution: "A multi-cloud deployment strategy utilizing declarative Terraform modules and Kubernetes container orchestrators.",
+      results: [
+        "Eliminated single vendor dependency risk",
+        "Reduced latency for global users by 35%",
+        "100% automated infrastructure setups"
+      ],
       borderColor: "border-purple-500/25"
     }
   ];
@@ -351,69 +416,359 @@ export default function CloudSrePage() {
       </section>
 
       {/* 6. SUCCESS STORIES */}
-      <section className="relative bg-gradient-to-b from-[#f0f5fd] via-[#f8fafc] to-[#edf4fc] py-20 border-b border-black/5 text-slate-950">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-            <h2 className="text-[10px] font-black tracking-widest text-[#2C5EAD] uppercase font-mono">case::studies</h2>
-            <h3 className="text-3xl font-extrabold tracking-tight text-slate-900">Cloud Success Stories</h3>
+      <section 
+        ref={successStoriesRef} 
+        className="relative h-auto lg:h-[135vh] bg-gradient-to-b from-[#cddbf7] via-[#e2ecfa] to-[#f0f5fd] border-b border-black/5 text-slate-950"
+      >
+        <div className="relative lg:sticky lg:top-0 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-auto lg:h-screen py-12 lg:py-0 flex flex-col justify-center overflow-visible lg:overflow-hidden z-10">
+          {/* Background Big Dotted Thumbs Up Icon */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0">
+            {/* Soft Radial Glow */}
+            <div className="absolute w-[350px] h-[350px] sm:w-[600px] sm:h-[600px] lg:w-[850px] lg:h-[850px] rounded-full bg-emerald-500/5 blur-[80px]" />
+            <svg 
+              className="w-[280px] h-[280px] sm:w-[500px] sm:h-[500px] lg:w-[750px] lg:h-[750px] text-emerald-600 opacity-[0.15]" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <pattern id="thumbs-up-dots-sre" width="0.4" height="0.4" patternUnits="userSpaceOnUse">
+                  <circle cx="0.2" cy="0.2" r="0.05" fill="currentColor" />
+                </pattern>
+              </defs>
+              <path 
+                d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"
+                fill="url(#thumbs-up-dots-sre)"
+              />
+              <path 
+                d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"
+                stroke="currentColor"
+                strokeWidth="0.12"
+                strokeDasharray="0.01 0.3"
+                strokeLinecap="round"
+              />
+            </svg>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            {successStories.map((story) => (
-              <div 
-                key={story.title}
-                className="p-8 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow"
+          {/* Animation container */}
+          <div className="relative w-full max-w-5xl mx-auto h-auto lg:h-[450px] flex justify-center items-center">
+            
+            {/* Desktop Mitosis Scroll Animation */}
+            <div className="hidden lg:flex justify-center items-center relative w-full max-w-[900px] h-full">
+              
+              {/* Central Separating Seam Line */}
+              <motion.div 
+                style={{ opacity: overlayOpacity }}
+                className="absolute top-6 bottom-6 left-1/2 -translate-x-1/2 w-[1px] bg-gradient-to-b from-transparent via-emerald-500/25 to-transparent z-25 pointer-events-none"
+              />
+
+              {/* 1. Left Card */}
+              <motion.div 
+                style={{ 
+                  x: leftCardX, 
+                  borderTopRightRadius: leftCardRadius, 
+                  borderBottomRightRadius: leftCardRadius,
+                  borderRightColor: leftCardBorderColor
+                }}
+                className="w-[420px] h-[450px] bg-[#060b14] border border-emerald-500/25 shadow-[0_20px_50px_rgba(6,11,20,0.25)] relative flex flex-col justify-between p-6 md:p-8 rounded-l-3xl z-10 transition-shadow duration-500 hover:shadow-[0_20px_40px_rgba(16,185,129,0.25)] pointer-events-auto text-white"
               >
-                <h4 className="text-lg font-bold text-slate-900 mb-2">{story.title}</h4>
-                <p className="text-xs text-slate-600 leading-relaxed mb-4">{story.desc}</p>
-                <div className="border-t border-slate-100 pt-4 mt-4">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest font-mono block mb-1">Our Strategy</span>
-                  <span className="text-xs text-slate-800 font-medium">{story.solution}</span>
-                </div>
+                <div className="absolute inset-0 rounded-inherit bg-[radial-gradient(circle_at_100%_50%,rgba(16,185,129,0.06),transparent_70%)] pointer-events-none" />
+                
+                <motion.div 
+                  style={{ opacity: innerOpacity, scale: innerScale }}
+                  className="w-full h-full flex flex-col justify-between relative z-10"
+                >
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[8px] font-bold text-emerald-400 bg-emerald-950/50 border border-emerald-500/30 px-2.5 py-0.5 rounded-full uppercase tracking-wider font-mono">MIGRATION</span>
+                      <span className="text-xl font-bold text-slate-700 font-mono">01</span>
+                    </div>
+                    <h3 className="text-xl font-black text-white leading-tight">{successStories[0].title}</h3>
+                    
+                    <div className="space-y-1">
+                      <span className="text-[8px] font-bold text-emerald-400 tracking-wider uppercase block font-mono">The Challenge</span>
+                      <p className="text-xs text-slate-300 leading-relaxed">{successStories[0].challenge}</p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="text-[8px] font-bold text-teal-400 tracking-wider uppercase block font-mono">Our Strategy</span>
+                      <p className="text-xs text-slate-300 leading-relaxed">{successStories[0].solution}</p>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-white/5 pt-5 mt-4">
+                    <span className="text-[8px] font-bold text-emerald-400 tracking-wider uppercase block font-mono mb-2">Key Results</span>
+                    <ul className="space-y-1">
+                      {successStories[0].results.map((res, i) => (
+                        <li key={i} className="flex items-center text-xs text-slate-200">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mr-2 flex-shrink-0" />
+                          <span>{res}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </motion.div>
+              </motion.div>
+
+              {/* 2. Right Card */}
+              <motion.div 
+                style={{ 
+                  x: rightCardX, 
+                  borderTopLeftRadius: rightCardRadius, 
+                  borderBottomLeftRadius: rightCardRadius,
+                  borderLeftColor: rightCardBorderColor
+                }}
+                className="w-[420px] h-[450px] bg-[#060b14] border border-emerald-500/25 shadow-[0_20px_50px_rgba(6,11,20,0.25)] relative flex flex-col justify-between p-6 md:p-8 rounded-r-3xl z-10 transition-shadow duration-500 hover:shadow-[0_20px_40px_rgba(16,185,129,0.25)] pointer-events-auto text-white"
+              >
+                <div className="absolute inset-0 rounded-inherit bg-[radial-gradient(circle_at_0%_50%,rgba(16,185,129,0.06),transparent_70%)] pointer-events-none" />
+                
+                <motion.div 
+                  style={{ opacity: innerOpacity, scale: innerScale }}
+                  className="w-full h-full flex flex-col justify-between relative z-10"
+                >
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[8px] font-bold text-teal-400 bg-emerald-950/50 border border-emerald-500/30 px-2.5 py-0.5 rounded-full uppercase tracking-wider font-mono">MULTI-CLOUD</span>
+                      <span className="text-xl font-bold text-slate-700 font-mono">02</span>
+                    </div>
+                    <h3 className="text-xl font-black text-white leading-tight">{successStories[1].title}</h3>
+                    
+                    <div className="space-y-1">
+                      <span className="text-[8px] font-bold text-emerald-400 tracking-wider uppercase block font-mono">The Challenge</span>
+                      <p className="text-xs text-slate-300 leading-relaxed">{successStories[1].challenge}</p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="text-[8px] font-bold text-teal-400 tracking-wider uppercase block font-mono">Our Strategy</span>
+                      <p className="text-xs text-slate-300 leading-relaxed">{successStories[1].solution}</p>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-white/5 pt-5 mt-4">
+                    <span className="text-[8px] font-bold text-emerald-400 tracking-wider uppercase block font-mono mb-2">Key Results</span>
+                    <ul className="space-y-1">
+                      {successStories[1].results.map((res, i) => (
+                        <li key={i} className="flex items-center text-xs text-slate-200">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mr-2 flex-shrink-0" />
+                          <span>{res}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </motion.div>
+              </motion.div>
+
+              {/* 3. Central Overlay */}
+              <motion.div 
+                style={{ opacity: overlayOpacity, scale: overlayScale }}
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center text-center z-30 pointer-events-none w-full px-8"
+              >
+                <h4 className="text-4xl sm:text-5xl font-black text-white tracking-tighter uppercase leading-none">
+                  Our <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Success Stories</span>
+                </h4>
+                <p className="text-xs text-emerald-400 font-bold uppercase tracking-wider mt-4 font-mono">
+                  Scroll down to divide cluster
+                </p>
+              </motion.div>
+
+            </div>
+
+            {/* Mobile View: Standard Stacked Cards */}
+            <div className="block lg:hidden space-y-6 px-2 w-full max-w-md mx-auto">
+              <div className="p-6 rounded-2xl bg-[#060b14] border border-emerald-500/20 shadow-md flex flex-col items-center justify-center text-center py-10 text-white">
+                <ThumbsUp className="w-10 h-10 text-emerald-400 mb-4 animate-bounce" />
+                <h4 className="text-xl font-extrabold text-white">Our Success Stories</h4>
+                <p className="text-xs text-emerald-400 mt-2 font-medium">Read our featured case studies below</p>
               </div>
-            ))}
+              
+              {successStories.map((story) => (
+                <div 
+                  key={story.title}
+                  className="p-6 rounded-2xl bg-[#060b14] border border-emerald-500/20 shadow-md flex flex-col justify-between text-white"
+                >
+                  <div className="space-y-4">
+                    <h4 className="text-base font-bold text-white">{story.title}</h4>
+                    
+                    <div className="space-y-1">
+                      <span className="text-[8px] font-bold text-emerald-400 tracking-wider uppercase block font-mono">The Challenge</span>
+                      <p className="text-xs text-slate-300 leading-relaxed">{story.challenge}</p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="text-[8px] font-bold text-teal-400 tracking-wider uppercase block font-mono">Our Strategy</span>
+                      <p className="text-xs text-slate-300 leading-relaxed">{story.solution}</p>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-white/5 pt-4 mt-4">
+                    <span className="text-[8px] font-bold text-emerald-400 tracking-wider uppercase block font-mono mb-2">Key Results</span>
+                    <ul className="space-y-1.5">
+                      {story.results.map((res, i) => (
+                        <li key={i} className="flex items-center text-xs text-slate-200">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mr-2 flex-shrink-0" />
+                          <span>{res}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ))}
+            </div>
+
           </div>
         </div>
       </section>
 
       {/* 7. FAQs */}
-      <section className="relative bg-gradient-to-b from-[#edf4fc] via-[#f1f5f9] to-[#ffffff] py-20 overflow-hidden text-slate-950">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-            <h2 className="text-[10px] font-black tracking-widest text-[#2C5EAD] uppercase font-mono">common::inquiries</h2>
-            <h3 className="text-3xl font-extrabold tracking-tight text-slate-900">Frequently Asked Questions</h3>
+      <section className="relative bg-[#ffffff] py-24 overflow-hidden text-slate-950 border-b border-slate-100">
+        {/* Header Section */}
+        <div className="text-center max-w-4xl mx-auto mb-16 relative">
+          {/* Watermark text behind */}
+          <div className="absolute inset-0 flex items-center justify-center -top-8 pointer-events-none select-none overflow-hidden">
+            <span className="text-5xl sm:text-7xl md:text-8xl font-black text-slate-100 tracking-wider whitespace-nowrap opacity-70 uppercase">
+              Frequently Ask Question
+            </span>
           </div>
+          
+          <h3 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 relative z-10">
+            Frequently Ask Question
+          </h3>
+          <p className="text-sm font-bold text-cyan-500 mt-2 relative z-10 cursor-pointer hover:underline">
+            <Link href="/contact">Click Here to contact now.</Link>
+          </p>
+        </div>
 
-          <div className="space-y-4">
-            {faqs.map((faq, idx) => {
-              const isOpen = openFaqIndex === idx;
-              return (
-                <div key={idx} className="border border-slate-200/85 rounded-2xl overflow-hidden bg-white/70 hover:bg-white transition-colors shadow-sm">
-                  <button
-                    onClick={() => toggleFaq(idx)}
-                    className="w-full flex justify-between items-center p-6 text-left font-bold text-slate-900 text-sm sm:text-base focus:outline-none"
-                  >
-                    <span>{faq.q}</span>
-                    <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180 text-[#2C5EAD]" : ""}`} />
-                  </button>
-
-                  <AnimatePresence initial={false}>
-                    {isOpen && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-12 gap-12 items-start">
+            
+            {/* Left Column: Accordions & Pagination */}
+            <div className="lg:col-span-7 flex flex-col space-y-4">
+              <div className="space-y-4 min-h-[380px]">
+                {faqs.slice(faqPage * 3, (faqPage + 1) * 3).map((faq, pageIdx) => {
+                  const globalIdx = faqPage * 3 + pageIdx;
+                  const isOpen = openFaqIndex === globalIdx;
+                  return (
+                    <div 
+                      key={globalIdx} 
+                      className="border border-slate-100 rounded-xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.03)] overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)]"
+                    >
+                      <button
+                        onClick={() => toggleFaq(globalIdx)}
+                        className="w-full flex justify-between items-center p-6 text-left font-bold text-slate-900 text-sm sm:text-base focus:outline-none"
                       >
-                        <div className="px-6 pb-6 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100">
-                          {faq.a}
+                        <span>{faq.q}</span>
+                        <div className="w-8 h-8 rounded-full bg-cyan-500 hover:bg-cyan-600 flex items-center justify-center text-white text-base font-black flex-shrink-0 transition-colors shadow-sm">
+                          {isOpen ? "−" : "+"}
                         </div>
-                      </motion.div>
+                      </button>
+
+                      <AnimatePresence initial={false}>
+                        {isOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.25 }}
+                          >
+                            <div className="px-6 pb-6 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-50">
+                              {faq.a}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-start gap-4 pt-6 pl-4">
+                <button 
+                  onClick={() => setFaqPage(0)}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-all shadow-sm ${
+                    faqPage === 0 ? "bg-cyan-600 scale-105" : "bg-cyan-500/70 hover:bg-cyan-500"
+                  }`}
+                >
+                  1
+                </button>
+                <button 
+                  onClick={() => setFaqPage(1)}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-all shadow-sm ${
+                    faqPage === 1 ? "bg-cyan-600 scale-105" : "bg-cyan-500/70 hover:bg-cyan-500"
+                  }`}
+                >
+                  2
+                </button>
+              </div>
+            </div>
+
+            {/* Right Column: Illustration & Question Input Form */}
+            <div className="lg:col-span-5 flex flex-col items-center p-8 bg-slate-50/50 rounded-3xl border border-slate-100 shadow-[0_10px_40px_rgba(0,0,0,0.02)]">
+              {/* Question mark illustration */}
+              <div className="w-56 h-48 relative mb-6">
+                <img 
+                  src="/assets/cloud_faq_illustration.png" 
+                  alt="Cloud FAQ Illustration" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+
+              <h4 className="text-2xl font-extrabold text-slate-900 mb-1">Any Question?</h4>
+              <p className="text-xs text-slate-500 text-center mb-6">
+                You can ask anything you want to know about Cloud Migrations & SRE.
+              </p>
+
+              {/* Submission Form */}
+              <div className="w-full space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono pl-1">
+                    Let me know.
+                  </label>
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      placeholder="Enter Here"
+                      value={faqInput}
+                      onChange={(e) => setFaqInput(e.target.value)}
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-xs sm:text-sm focus:outline-none focus:border-cyan-500 pr-10 shadow-sm"
+                    />
+                    {faqInput && (
+                      <button 
+                        onClick={() => setFaqInput("")}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold font-mono"
+                      >
+                        ×
+                      </button>
                     )}
-                  </AnimatePresence>
+                  </div>
                 </div>
-              );
-            })}
+
+                <div className="flex justify-center pt-2">
+                  <button 
+                    onClick={() => {
+                      if (!faqInput.trim()) return;
+                      setFaqSent(true);
+                      setFaqInput("");
+                      setTimeout(() => setFaqSent(false), 4000);
+                    }}
+                    className="w-full sm:w-auto px-10 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-cyan-500/20 active:scale-95"
+                  >
+                    {faqSent ? "Sent Successfully!" : "Sent"}
+                  </button>
+                </div>
+                
+                {faqSent && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center text-[10px] font-bold text-emerald-600 font-mono mt-2"
+                  >
+                    Thank you! Your question has been forwarded to our support queue.
+                  </motion.div>
+                )}
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
