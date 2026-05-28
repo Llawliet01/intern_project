@@ -1,65 +1,2692 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { motion, useScroll, useTransform, useSpring, useMotionValueEvent } from "framer-motion";
+import { 
+  Code, Cpu, Settings, Terminal, UserCheck, 
+  Activity, Lock, Database, Sparkles, ArrowRight,
+  Zap, ShieldCheck, CreditCard, Heart, Cloud, ShoppingCart, DollarSign, Star, Award, Check, Quote
+} from "lucide-react";
+import { servicesData, blogData, solutionsData } from "@/data/siteData";
+
+const gridPositions = [
+  // Row 1
+  [-570, -120], // Col 1
+  [-190, -120], // Col 2
+  [190, -120],  // Col 3
+  [570, -120],  // Col 4
+
+  // Row 2
+  [-570, 120],  // Col 1
+  [-190, 120],  // Col 2
+  [190, 120],   // Col 3
+  [570, 120],   // Col 4
+];
+
+const serviceIcons = {
+  "custom-development": Code,
+  "mobile-apps": Cpu,
+  "cloud-sre": Settings,
+  "api-integrations": Terminal,
+  "qa-performance": UserCheck,
+  "managed-support": Activity,
+  "cybersecurity": Lock,
+  "data-ai": Database,
+  "ux-ui": Sparkles
+};
+
+const serviceAnimationMeta = {
+  "cybersecurity": {
+    themeColor: "text-blue-400",
+    bulletColor: "bg-blue-400/70",
+    iconBg: "bg-blue-500/10 text-blue-400",
+    hoverGlow: "rgba(59, 130, 246, 0.15)",
+    hoverBorder: "rgba(59, 130, 246, 0.4)"
+  },
+  "data-ai": {
+    themeColor: "text-emerald-400",
+    bulletColor: "bg-emerald-400/70",
+    iconBg: "bg-emerald-500/10 text-emerald-400",
+    hoverGlow: "rgba(16, 185, 129, 0.15)",
+    hoverBorder: "rgba(16, 185, 129, 0.4)"
+  },
+  "ux-ui": {
+    themeColor: "text-purple-400",
+    bulletColor: "bg-purple-400/70",
+    iconBg: "bg-purple-500/10 text-purple-400",
+    hoverGlow: "rgba(168, 85, 247, 0.15)",
+    hoverBorder: "rgba(168, 85, 247, 0.4)"
+  },
+  "api-integrations": {
+    themeColor: "text-cyan-400",
+    bulletColor: "bg-cyan-400/70",
+    iconBg: "bg-cyan-500/10 text-cyan-400",
+    hoverGlow: "rgba(6, 182, 212, 0.15)",
+    hoverBorder: "rgba(6, 182, 212, 0.4)"
+  },
+  "qa-performance": {
+    themeColor: "text-amber-400",
+    bulletColor: "bg-amber-400/70",
+    iconBg: "bg-amber-500/10 text-amber-400",
+    hoverGlow: "rgba(245, 158, 11, 0.15)",
+    hoverBorder: "rgba(245, 158, 11, 0.4)"
+  },
+  "managed-support": {
+    themeColor: "text-rose-400",
+    bulletColor: "bg-rose-400/70",
+    iconBg: "bg-rose-500/10 text-rose-400",
+    hoverGlow: "rgba(244, 63, 94, 0.15)",
+    hoverBorder: "rgba(244, 63, 94, 0.4)"
+  },
+  "custom-development": {
+    themeColor: "text-sky-400",
+    bulletColor: "bg-sky-400/70",
+    iconBg: "bg-sky-500/10 text-sky-400",
+    hoverGlow: "rgba(14, 165, 233, 0.15)",
+    hoverBorder: "rgba(14, 165, 233, 0.4)"
+  },
+  "mobile-apps": {
+    themeColor: "text-teal-400",
+    bulletColor: "bg-teal-400/70",
+    iconBg: "bg-teal-500/10 text-teal-400",
+    hoverGlow: "rgba(20, 184, 166, 0.15)",
+    hoverBorder: "rgba(20, 184, 166, 0.4)"
+  },
+  "cloud-sre": {
+    themeColor: "text-violet-400",
+    bulletColor: "bg-violet-400/70",
+    iconBg: "bg-violet-500/10 text-violet-400",
+    hoverGlow: "rgba(139, 92, 246, 0.15)",
+    hoverBorder: "rgba(139, 92, 246, 0.4)"
+  }
+};
+
+function Carousel3dCard({ slug, data, index, scrollYProgress, isActive, onCardClick }) {
+  const meta = serviceAnimationMeta[slug] || {
+    themeColor: "text-primary",
+    bulletColor: "bg-primary/70",
+    iconBg: "bg-slate-50 text-slate-500",
+    hoverGlow: "rgba(44, 94, 173, 0.15)",
+    hoverBorder: "rgba(44, 94, 173, 0.4)"
+  };
+  const IconComponent = serviceIcons[slug] || Code;
+
+  // Custom distance calculation from the active front position
+  const distanceVal = useTransform(scrollYProgress, (progress) => {
+    const activeP = progress * 7;
+    const diff = Math.abs(index - activeP);
+    return Math.min(diff, 8 - diff);
+  });
+
+  // Smoothly interpolate styling values based on distance from the front
+  const scale = useTransform(distanceVal, [0, 1, 2, 3], [1.05, 0.82, 0.68, 0.58]);
+  const opacity = useTransform(distanceVal, [0, 1, 2, 3], [1, 0.75, 0.3, 0.12]);
+  
+  // Depth of field blur filter
+  const blurVal = useTransform(distanceVal, [0, 1, 2, 3], [0, 1.5, 3.5, 6]);
+  const filter = useTransform(blurVal, (v) => `blur(${v}px)`);
+
+  const angle = index * 45;
+
+  return (
+    <div 
+      className="carousel-3d-card-wrapper"
+      style={{
+        transformStyle: "preserve-3d",
+        transform: `rotateY(${angle}deg) translateZ(480px)`
+      }}
+    >
+      <motion.div
+        onClick={() => onCardClick(index)}
+        style={{
+          scale,
+          opacity,
+          filter,
+          willChange: "transform, opacity, filter",
+          "--hover-glow": meta.hoverGlow,
+          "--hover-border": meta.hoverBorder
+        }}
+        className="carousel-3d-card group"
+      >
+        <div className="flex flex-col justify-between h-full">
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <div className={`p-2 rounded-xl transition-all duration-300 group-hover:scale-110 ${meta.iconBg}`}>
+                <IconComponent className="w-5 h-5" />
+              </div>
+              <div className="w-1.5 h-1.5 rounded-full bg-white/20 transition-all duration-300 group-hover:bg-white/40" />
+            </div>
+            <h4 className="text-sm font-bold text-white leading-snug group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-slate-300 transition-all duration-300">
+              {data.title}
+            </h4>
+            <p className="text-[10px] text-slate-400 leading-relaxed line-clamp-3 group-hover:text-slate-300 transition-colors">
+              {data.description}
+            </p>
+          </div>
+
+          <div className="space-y-3 mt-auto pt-4">
+            <ul className="space-y-1">
+              {data.features.slice(0, 3).map((f) => (
+                <li key={f} className="text-[9px] text-slate-400/90 flex items-center leading-tight">
+                  <span className={`w-1 h-1 rounded-full ${meta.bulletColor} mr-2 flex-shrink-0 transition-transform group-hover:scale-125`} />
+                  <span className="group-hover:text-slate-300 transition-colors line-clamp-1">{f}</span>
+                </li>
+              ))}
+            </ul>
+            
+            <div className="border-t border-white/5 pt-3">
+              <Link 
+                href={`/services/${slug}`}
+                onClick={(e) => {
+                  if (!isActive) {
+                    // Prevent navigation and focus card if it's currently in the background
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onCardClick(index);
+                  } else {
+                    e.stopPropagation();
+                  }
+                }}
+                className={`inline-flex items-center text-xs font-bold transition-all duration-300 ${meta.themeColor} group-hover:brightness-110`}
+              >
+                Learn More
+                <ArrowRight className="w-3.5 h-3.5 ml-1.5 transform group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
 
 export default function Home() {
+  const router = useRouter();
+  const [orderCount, setOrderCount] = useState(3370);
+  const [isAnnual, setIsAnnual] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setOrderCount((prev) => prev + Math.floor(Math.random() * 3));
+    }, 1800);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const card1 = document.getElementById("step-card-1");
+      const card2 = document.getElementById("step-card-2");
+      const card3 = document.getElementById("step-card-3");
+      if (!card1 || !card2 || !card3) return;
+
+      if (window.innerWidth <= 768) {
+        [card1, card2, card3].forEach((card) => {
+          card.classList.remove("stacked-under-1", "stacked-under-2", "active-focus");
+        });
+        return;
+      }
+
+      // Base sticky offset from CSS
+      const cardHeight = 400;
+      const topOffset = 170;
+      const visibleHeight = cardHeight * 0.1; // 40px
+
+      const offsets = {
+        top1: topOffset,
+        top2: topOffset + visibleHeight,
+        top3: topOffset + (visibleHeight * 2)
+      };
+
+      const rect1 = card1.getBoundingClientRect();
+      const rect2 = card2.getBoundingClientRect();
+      const rect3 = card3.getBoundingClientRect();
+
+      const tolerance = 3;
+
+      const isCard1Stuck = rect1.top <= offsets.top1 + tolerance;
+      const isCard2Stuck = rect2.top <= offsets.top2 + tolerance;
+      const isCard3Stuck = rect3.top <= offsets.top3 + tolerance;
+
+      card1.classList.remove("stacked-under-1", "stacked-under-2", "active-focus");
+      card2.classList.remove("stacked-under-1", "stacked-under-2", "active-focus");
+      card3.classList.remove("stacked-under-1", "stacked-under-2", "active-focus");
+
+      if (isCard3Stuck) {
+        card1.classList.add("stacked-under-1");
+        card2.classList.add("stacked-under-2");
+        card3.classList.add("active-focus");
+      } else if (isCard2Stuck) {
+        card1.classList.add("stacked-under-2");
+        card2.classList.add("active-focus");
+      } else if (isCard1Stuck) {
+        card1.classList.add("active-focus");
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleScroll);
+    handleScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, []);
+
+  // Grab 3 latest blog posts
+  const blogSlugs = Object.keys(blogData).slice(0, 3);
+
+  const gitInsightsData = {
+    "cloud-cost-guardrails": {
+      branch: "sre",
+      branchName: "sre/infra-budget",
+      branchColor: "#a78bfa",
+      commitHash: "f6b8c4d",
+      commitMsg: "sre: enforce autoscale budgets & instance caps",
+      fileName: "infra/aws_guardrails.tf",
+      diff: [
+        { type: "normal", text: "resource \"aws_instance\" \"app_node\" {" },
+        { type: "deletion", text: "-   instance_type = \"t3.xlarge\"" },
+        { type: "addition", text: "+   instance_type = \"t3.medium\"" },
+        { type: "normal", text: "}" },
+        { type: "normal", text: "" },
+        { type: "normal", text: "resource \"aws_autoscaling_group\" \"asg\" {" },
+        { type: "addition", text: "+   max_size          = 4" },
+        { type: "addition", text: "+   # Cron shutdown at 18:00 UTC for sandboxes" },
+        { type: "addition", text: "+   recurrence        = \"0 18 * * 1-5\"" },
+        { type: "normal", text: "}" }
+      ]
+    },
+    "cicd-regulated-environments": {
+      branch: "security",
+      branchName: "sec/pipeline-audit",
+      branchColor: "#2dd4bf",
+      commitHash: "e3d9f2a",
+      commitMsg: "sec: add signed commits & automated vulnerability gates",
+      fileName: ".gitlab-ci.yml",
+      diff: [
+        { type: "normal", text: "test_job:" },
+        { type: "deletion", text: "-   stage: test" },
+        { type: "deletion", text: "-   script: npm run test" },
+        { type: "addition", text: "+   stage: compliance" },
+        { type: "addition", text: "+   script:" },
+        { type: "addition", text: "+     - npm run audit-licenses" },
+        { type: "addition", text: "+     - owasp-dependency-check --project \"Aetheris\"" },
+        { type: "addition", text: "+     - semgrep --config auto" }
+      ]
+    },
+    "designing-scalable-apis": {
+      branch: "dev",
+      branchName: "dev/api-caching",
+      branchColor: "#38bdf8",
+      commitHash: "b2a5f7c",
+      commitMsg: "feat: integrate redis cluster for rate-limiting",
+      fileName: "api/gateway/middleware.js",
+      diff: [
+        { type: "normal", text: "const rateLimit = require('express-rate-limit');" },
+        { type: "deletion", text: "- app.use(basicRateLimit);" },
+        { type: "addition", text: "+ const limitStore = new RedisStore({ client: redisCluster });" },
+        { type: "addition", text: "+ app.use(rateLimit({" },
+        { type: "addition", text: "+   windowMs: 60 * 1000, // 1 minute window" },
+        { type: "addition", text: "+   max: 120, // Limit each IP to 120 requests" },
+        { type: "addition", text: "+   store: limitStore" },
+        { type: "addition", text: "+ }));" }
+      ]
+    }
+  };
+  
+  // Grab key metrics
+  const stats = [
+    { 
+      number: "250+", 
+      label: "Platforms Delivered", 
+      heading: "Global Scale & Deployments",
+      desc: "We have built, hardened, and deployed high-performance custom engines and data systems for enterprise brands worldwide.",
+      icon: Award,
+      glowClass: "glow-card-gold"
+    },
+    { 
+      number: "4x", 
+      label: "Accelerated Release Speed", 
+      heading: "Rapid Release Velocity",
+      desc: "Our integration of automated CI/CD guardrails and declarative infrastructure templates enables engineering teams to deploy 4x faster.",
+      icon: Zap,
+      glowClass: "glow-card-teal"
+    },
+    { 
+      number: "99.99%", 
+      label: "System Uptime Guaranteed", 
+      heading: "Maximum Operational Resilience",
+      desc: "By designing fault-tolerant multi-region cluster topologies and hooking up active 24/7 reliability engineering, we secure critical availability.",
+      icon: ShieldCheck,
+      glowClass: "glow-card-purple"
+    }
+  ];
+
+
+
+
+
+  const testimonials = [
+    { 
+      id: 1,
+      q: "Aetheris Systems provided exceptional cloud setup and migrations. Their engineers solved our synchronization errors and did it with zero platform downtime.", 
+      name: "Amit Desai", 
+      role: "VP of Product, ShopUnited", 
+      glowClass: "glow-card-gold",
+      stars: 5,
+      initials: "AD",
+      avatarClass: "avatar-grad-1"
+    },
+    { 
+      id: 2,
+      q: "Their team rebuilt our medical booking system, securing patient logs and compliance audits efficiently. Extremely knowledgeable.", 
+      name: "Sanjay Rao", 
+      role: "VP Engineering, MediData Insights", 
+      glowClass: "glow-card-teal",
+      stars: 5,
+      initials: "SR",
+      avatarClass: "avatar-grad-2"
+    },
+    { 
+      id: 3,
+      q: "Excellent experience working with them. They redesigned our entire payment processing architecture to support a massive volume increase.", 
+      name: "Meera Iyer", 
+      role: "CTO, NeoBank Digital", 
+      glowClass: "glow-card-purple",
+      stars: 5,
+      initials: "MI",
+      avatarClass: "avatar-grad-3"
+    },
+    { 
+      id: 4,
+      q: "The scroll stack animations are incredibly smooth. Aetheris Systems helped us elevate our website design to a whole new premium level in just a few hours.", 
+      name: "Sarah Jenkins", 
+      role: "Lead Product Designer at Figma", 
+      glowClass: "glow-card-gold",
+      stars: 5,
+      initials: "SJ",
+      avatarClass: "avatar-grad-4"
+    },
+    { 
+      id: 5,
+      q: "Implementing infinite loops and interactive elements with vanilla JS has never been this clean. Excellent performance and zero layout thrashing.", 
+      name: "Alex Rivera", 
+      role: "Senior Frontend Engineer at Vercel", 
+      glowClass: "glow-card-teal",
+      stars: 5,
+      initials: "AR",
+      avatarClass: "avatar-grad-5"
+    },
+    { 
+      id: 6,
+      q: "Our conversion rates increased by 22% after we refreshed our home page using these fluid motion designs. Highly recommended for modern SaaS websites.", 
+      name: "David Chen", 
+      role: "VP of Product at Stripe", 
+      glowClass: "glow-card-purple",
+      stars: 5,
+      initials: "DC",
+      avatarClass: "avatar-grad-6"
+    },
+    { 
+      id: 7,
+      q: "The attention to minor details in typography, gradients, and micro-interactions makes a massive difference. Outstanding UI toolkit and support!", 
+      name: "Emily Watson", 
+      role: "Creative Director at Framer", 
+      glowClass: "glow-card-gold",
+      stars: 5,
+      initials: "EW",
+      avatarClass: "avatar-grad-7"
+    },
+    { 
+      id: 8,
+      q: "We were skeptical about pure CSS performance on heavy pages, but Aetheris runs perfectly at 120 FPS even on lower-end mobile devices.", 
+      name: "Marcus Vance", 
+      role: "Tech Lead at Linear", 
+      glowClass: "glow-card-teal",
+      stars: 4,
+      initials: "MV",
+      avatarClass: "avatar-grad-8"
+    },
+    { 
+      id: 9,
+      q: "The team has created something truly state-of-the-art here. The glassmorphism transitions are extremely crisp, modern, and perfectly robust.", 
+      name: "Hana Kobayashi", 
+      role: "Design Engineer at Vercel", 
+      glowClass: "glow-card-purple",
+      stars: 5,
+      initials: "HK",
+      avatarClass: "avatar-grad-9"
+    },
+    { 
+      id: 10,
+      q: "Setting this up was a breeze. We integrated the component structure into our NextJS project in under ten minutes with zero compilation errors.", 
+      name: "Oliver Larsen", 
+      role: "Frontend Lead at Supabase", 
+      glowClass: "glow-card-gold",
+      stars: 5,
+      initials: "OL",
+      avatarClass: "avatar-grad-10"
+    }
+  ];
+
+  const [reviews, setReviews] = useState(testimonials);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [translateX, setTranslateX] = useState(0);
+  const [useTransition, setUseTransition] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+  const trackRef = useRef(null);
+
+  const getSlideDistance = () => {
+    if (!trackRef.current || !trackRef.current.children.length) return 0;
+    const card = trackRef.current.children[0];
+    const cardWidth = card.offsetWidth;
+    const gap = parseFloat(window.getComputedStyle(trackRef.current).gap) || 24;
+    return cardWidth + gap;
+  };
+
+  const slideNext = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setUseTransition(true);
+
+    const distance = getSlideDistance();
+    setTranslateX(-distance);
+
+    setTimeout(() => {
+      setUseTransition(false);
+      setReviews((prev) => {
+        const next = [...prev];
+        const first = next.shift();
+        next.push(first);
+        return next;
+      });
+      setTranslateX(0);
+      setIsTransitioning(false);
+    }, 600);
+  };
+
+  const slidePrev = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+
+    const distance = getSlideDistance();
+
+    setReviews((prev) => {
+      const next = [...prev];
+      const last = next.pop();
+      next.unshift(last);
+      return next;
+    });
+
+    setUseTransition(false);
+    setTranslateX(-distance);
+
+    setTimeout(() => {
+      setUseTransition(true);
+      setTranslateX(0);
+    }, 20);
+
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 620);
+  };
+
+  const navigateToCardIndex = (targetId) => {
+    if (isTransitioning) return;
+
+    const targetPos = reviews.findIndex((r) => r.id === targetId);
+    if (targetPos === 0) return;
+
+    setIsTransitioning(true);
+    setUseTransition(true);
+    const distance = getSlideDistance();
+
+    setTranslateX(-distance * targetPos);
+
+    setTimeout(() => {
+      setUseTransition(false);
+      setReviews((prev) => {
+        const next = [...prev];
+        for (let i = 0; i < targetPos; i++) {
+          const leading = next.shift();
+          next.push(leading);
+        }
+        return next;
+      });
+      setTranslateX(0);
+      setIsTransitioning(false);
+    }, 600);
+  };
+
+  useEffect(() => {
+    if (isHovered || isTransitioning) return;
+    const interval = setInterval(() => {
+      slideNext();
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [isHovered, isTransitioning, reviews]);
+
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [activeSectorIndex, setActiveSectorIndex] = useState(0);
+  const [activeInsightSlug, setActiveInsightSlug] = useState("cloud-cost-guardrails");
+  const [hoveredInsightSlug, setHoveredInsightSlug] = useState(null);
+  const servicesContainerRef = useRef(null);
+
+  useEffect(() => {
+    const checkScreen = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+    return () => window.removeEventListener("resize", checkScreen);
+  }, []);
+
+  const { scrollYProgress: rawScrollYProgress } = useScroll({
+    target: isDesktop ? servicesContainerRef : undefined,
+    offset: ["start start", "end end"],
+  });
+
+  const scrollYProgress = useSpring(rawScrollYProgress, {
+    stiffness: 80,
+    damping: 25,
+    restDelta: 0.001
+  });
+
+  const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
+
+  useMotionValueEvent(rawScrollYProgress, "change", (latest) => {
+    const idx = Math.min(Math.max(Math.round(latest * 7), 0), 7);
+    setActiveCarouselIndex(idx);
+  });
+
+  const [tiltStyle, setTiltStyle] = useState({ transform: "rotateX(52deg) rotateZ(-38deg)" });
+  const stageRef = useRef(null);
+
+  const handleMouseMove = (e) => {
+    if (!stageRef.current) return;
+    const rect = stageRef.current.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const xVal = (e.clientX - rect.left) / width - 0.5;
+    const yVal = (e.clientY - rect.top) / height - 0.5;
+    const tiltX = 52 - yVal * 14;
+    const tiltZ = -38 + xVal * 14;
+    setTiltStyle({
+      transform: `rotateX(${tiltX}deg) rotateZ(${tiltZ}deg)`
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setTiltStyle({
+      transform: "rotateX(52deg) rotateZ(-38deg)"
+    });
+  };
+
+  const handleCardClick = (index) => {
+    if (!servicesContainerRef.current) return;
+    const element = servicesContainerRef.current;
+    const elementTop = element.getBoundingClientRect().top + window.scrollY;
+    const elementHeight = element.scrollHeight;
+    const viewportHeight = window.innerHeight;
+    const scrollableHeight = elementHeight - viewportHeight;
+    const targetScroll = elementTop + (index / 7) * scrollableHeight;
+    window.scrollTo({
+      top: targetScroll,
+      behavior: "smooth"
+    });
+  };
+
+  const headerOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+  const headerY = useTransform(scrollYProgress, [0, 0.15], [0, -50]);
+  const rotateY = useTransform(scrollYProgress, [0, 1], [0, -315]);
+
+  const serviceGlowClasses = ["glow-card-teal", "glow-card-gold", "glow-card-purple", "glow-card-rose"];
+  const blogGlows = ["glow-card-gold", "glow-card-teal", "glow-card-purple"];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="relative bg-slate-50 text-slate-900">
+      
+      {/* Grid background overlay */}
+      <div className="absolute inset-0 grid-pattern opacity-[0.4] pointer-events-none -z-20"></div>
+
+      {/* Hero Section Gradient background glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-gradient-to-br from-[#2C5EAD] via-[#1591DC] to-[#4BB8FA] opacity-[0.08] rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse-slow"></div>
+
+      {/* 1. Hero Section (White/Light Slate Alternate) */}
+      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+        {/* We use a grid system that divides the space into 12 cols on desktop */}
+        <div className="grid lg:grid-cols-12 gap-12 items-center">
+          
+          {/* Left Column: Headings, Paragraph, Buttons, and Trust Metrics (lg:col-span-7) */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            className="lg:col-span-7 space-y-6 flex flex-col items-center lg:items-start text-center lg:text-left"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#C4E2F5]/30 border border-[#C4E2F5] text-xs font-bold text-primary">
+              <Sparkles className="w-4 h-4 text-[#1591DC]" />
+              <span>Orchestrating Next-Generation Digital Architectures</span>
+            </div>
+
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-[1.15] tracking-tight text-slate-900">
+              AETHERIS SYSTEMS <br />
+              <span className="bg-gradient-to-r from-[#2C5EAD] via-[#1591DC] to-[#4BB8FA] bg-clip-text text-transparent">IT Solutions Engineered for Impact</span>
+            </h1>
+
+            <p className="text-base sm:text-lg text-slate-600 max-w-2xl leading-relaxed">
+              We design, deploy, and support secure, scalable cloud systems, bespoke software platforms, and enterprise API gateways for global organizations.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2 w-full font-mono">
+              <Link 
+                href="/contact" 
+                className="flex items-center justify-center w-full sm:w-auto px-8 py-3.5 rounded-full font-bold text-white bg-gradient-to-r from-[#2C5EAD] to-[#1591DC] hover:opacity-95 hover:scale-102 hover:shadow-lg hover:shadow-primary/20 transition-all glow-btn text-sm"
+              >
+                Start Your Project
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Link>
+              <Link 
+                href="/case-studies" 
+                className="flex items-center justify-center w-full sm:w-auto px-8 py-3.5 rounded-full font-bold text-primary bg-white border border-[#2C5EAD]/30 hover:bg-slate-50 transition-all text-sm shadow-sm"
+              >
+                View Case Studies
+              </Link>
+            </div>
+
+            {/* Space-efficient Trust metrics to fill left-side whitespace */}
+            <div className="pt-8 border-t border-slate-200/60 w-full grid grid-cols-3 gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-emerald-50 text-emerald-500 border border-emerald-100 flex items-center justify-center">
+                  <Check className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-mono text-slate-400 block uppercase tracking-wider font-bold leading-none mb-1">compliance</span>
+                  <span className="text-xs font-bold text-slate-800">SOC2 Ready</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-blue-50 text-blue-500 border border-blue-100 flex items-center justify-center">
+                  <Check className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-mono text-slate-400 block uppercase tracking-wider font-bold leading-none mb-1">uptime SLA</span>
+                  <span className="text-xs font-bold text-slate-800">99.99% SLA</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-purple-50 text-purple-500 border border-purple-100 flex items-center justify-center">
+                  <Check className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-mono text-slate-400 block uppercase tracking-wider font-bold leading-none mb-1">sre team</span>
+                  <span className="text-xs font-bold text-slate-800">24/7 Monitoring</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+          
+          {/* Right Column: 3D Hologram Deck or Mobile Fallback (lg:col-span-5) */}
+          <div className="lg:col-span-5 flex justify-center items-center relative w-full">
+            {/* Mobile Fallback: Static Mockup Image */}
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="block lg:hidden w-full max-w-lg relative rounded-xl border border-slate-200 shadow-[0_0_20px_rgba(75,184,250,0.1)] overflow-hidden bg-white aspect-[16/10] select-none"
+            >
+              <Image 
+                src="/assets/images/hero_dashboard.png"
+                alt="Aetheris Systems Core Operations Dashboard Mockup"
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, 500px"
+                className="object-cover opacity-95"
+              />
+            </motion.div>
+
+            {/* Desktop 3D Hologram Deck */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="hidden lg:block w-full h-[480px] relative select-none"
+            >
+              <div 
+                ref={stageRef}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+                className="w-full h-full hologram-stage flex items-center justify-center"
+              >
+                {/* Resized deck to fit the right column spacing perfectly (w-420 h-280) */}
+                <div 
+                  style={tiltStyle}
+                  className="w-[420px] h-[280px] relative hologram-deck transition-transform duration-300 ease-out"
+                >
+                  {/* 3D Vertical data-packets flowing upwards */}
+                  <div className="absolute left-[20%] top-[30%] w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_10px_#22d3ee] hologram-data-packet" style={{ animationDelay: "0s" }} />
+                  <div className="absolute left-[70%] top-[40%] w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_10px_#60a5fa] hologram-data-packet" style={{ animationDelay: "0.7s" }} />
+                  <div className="absolute left-[45%] top-[70%] w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399] hologram-data-packet" style={{ animationDelay: "1.4s" }} />
+
+                  {/* Layer 1: Infrastructure Dashboard (Bottom Level, Z = 0) */}
+                  <div className="w-full h-full rounded-3xl bg-slate-950/90 border border-slate-800 p-5 flex flex-col justify-between text-left translate-z-base holo-glow-blue transition-all duration-300">
+                    <div className="flex justify-between items-center border-b border-slate-900 pb-2">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                        <span className="text-[8px] font-mono font-bold text-slate-400 tracking-wider">AWS CLOUD CLUSTER // MAIN</span>
+                      </div>
+                      <span className="text-[8px] font-mono text-slate-500">US-EAST-1</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-2.5 py-2">
+                      <div className="space-y-0.5">
+                        <span className="text-[8px] font-mono text-slate-500 block uppercase">Uptime</span>
+                        <span className="text-sm font-black text-white font-mono">99.998%</span>
+                      </div>
+                      <div className="space-y-0.5">
+                        <span className="text-[8px] font-mono text-slate-500 block uppercase">Cpu</span>
+                        <span className="text-sm font-black text-blue-400 font-mono">24.2%</span>
+                      </div>
+                      <div className="space-y-0.5">
+                        <span className="text-[8px] font-mono text-slate-500 block uppercase">Nodes</span>
+                        <span className="text-sm font-black text-white font-mono">148/150</span>
+                      </div>
+                    </div>
+
+                    <div className="flex-1 flex items-end">
+                      <div className="w-full h-10 relative opacity-60">
+                        {/* Looping SVG Spline line chart */}
+                        <svg viewBox="0 0 400 50" className="w-full h-full">
+                          <path 
+                            d="M0,35 Q30,10 60,30 T120,20 T180,40 T240,15 T300,30 T360,10 T400,25" 
+                            fill="none" 
+                            stroke="#3b82f6" 
+                            strokeWidth="2.5" 
+                            strokeLinecap="round" 
+                          />
+                          <path 
+                            d="M0,35 Q30,10 60,30 T120,20 T180,40 T240,15 T300,30 T360,10 T400,25 L400,50 L0,50 Z" 
+                            fill="url(#infra-grad-2)" 
+                            opacity="0.15" 
+                          />
+                          <defs>
+                            <linearGradient id="infra-grad-2" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#3b82f6" />
+                              <stop offset="100%" stopColor="transparent" />
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Layer 2: API Request Monitor (Middle Level, Z = 55) */}
+                  <div className="w-full h-full rounded-3xl bg-[#090d16]/90 border border-cyan-500/20 p-5 flex flex-col justify-between text-left absolute inset-0 translate-z-mid holo-glow-cyan transition-all duration-300">
+                    <div className="flex justify-between items-center border-b border-slate-900 pb-2">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                        <span className="text-[8px] font-mono font-bold text-slate-400 tracking-wider">KONG ENTERPRISE API GATEWAY</span>
+                      </div>
+                      <span className="text-[8px] font-mono text-cyan-400 font-bold">LIVE</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5 py-1">
+                      <div className="p-2 bg-slate-950/50 border border-slate-800/80 rounded-xl flex items-center justify-between">
+                        <div>
+                          <span className="text-[7px] font-mono text-slate-500 block uppercase">Request Load</span>
+                          <span className="text-xs font-black text-white font-mono">18.4K <span className="text-[8px] font-normal text-slate-400">req/s</span></span>
+                        </div>
+                        <Database className="w-3.5 h-3.5 text-cyan-400" />
+                      </div>
+                      <div className="p-2 bg-slate-950/50 border border-slate-800/80 rounded-xl flex items-center justify-between">
+                        <div>
+                          <span className="text-[7px] font-mono text-slate-500 block uppercase">Latency</span>
+                          <span className="text-xs font-black text-cyan-400 font-mono">42 <span className="text-[8px] font-normal text-slate-400">ms</span></span>
+                        </div>
+                        <Cpu className="w-3.5 h-3.5 text-cyan-400" />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3 pt-1">
+                      <span className="text-[7px] font-mono text-slate-500 uppercase">Distribution:</span>
+                      <div className="flex-1 flex gap-1 h-5 items-end justify-end">
+                        {[35, 60, 45, 90, 70, 40, 85, 55, 95, 30].map((h, i) => (
+                          <div 
+                            key={i} 
+                            className="w-2 bg-gradient-to-t from-cyan-600 to-cyan-400 rounded-t-sm"
+                            style={{ height: `${h}%` }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Layer 3: Cloudflare Firewall Gate (Top Level, Z = 110) */}
+                  <div className="w-full h-full rounded-3xl bg-[#060a10]/90 border border-emerald-500/30 p-5 flex flex-col justify-between text-left absolute inset-0 translate-z-top holo-glow-emerald transition-all duration-300">
+                    <div className="flex justify-between items-center border-b border-slate-900 pb-2">
+                      <div className="flex items-center gap-1.5">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                        <span className="text-[8px] font-mono font-bold text-slate-400 tracking-wider">AETHERIS COMPLIANCE VAULT</span>
+                      </div>
+                      <div className="px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[7px] font-mono font-bold text-emerald-400 select-none">
+                        WAF
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5 py-1.5 flex-1 flex flex-col justify-center">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-slate-400 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                          SSL/TLS Verification
+                        </span>
+                        <span className="font-mono text-emerald-400 font-bold text-[10px]">SECURE (TLS 1.3)</span>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-slate-400 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                          SOC2 Compliance Gate
+                        </span>
+                        <span className="font-mono text-emerald-400 font-bold text-[10px]">VERIFIED</span>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-slate-400 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                          Vulnerabilities
+                        </span>
+                        <span className="font-mono text-emerald-400 font-bold text-[10px]">0 DETECTED</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-950/80 border border-slate-900/60 rounded-xl p-2 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Terminal className="w-3 h-3 text-emerald-400" />
+                        <span className="text-[8px] font-mono text-slate-500">auditing log_vault...</span>
+                      </div>
+                      <span className="text-[8px] font-mono text-slate-400 font-bold">OK // 200</span>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </motion.div>
+          </div>
         </div>
-      </main>
+      </section>
+
+      {/* 2. About Intro Section (Light Blue Alternate Background) */}
+      <section className="relative border-y border-slate-200/60 bg-gradient-to-b from-[#e8eff6] via-[#edf3f8] to-[#dbe6f2] py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <h2 className="text-xs font-black tracking-widest text-[#1591DC] uppercase">
+                Your Trusted Partner for Digital Transformation
+              </h2>
+              <h3 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                Empowering businesses with robust cloud strategies and tailored digital execution.
+              </h3>
+              <p className="text-slate-600 leading-relaxed">
+                At Aetheris Systems, we solve complex technical architecture bottlenecks. Whether you need to migrate from a legacy monolith database, configure zero-downtime deployments, or audit systems security compliance, our engineering division has the expertise.
+              </p>
+              <div>
+                <Link 
+                  href="/about" 
+                  className="inline-flex items-center text-sm font-bold text-primary hover:text-secondary transition-colors group"
+                >
+                  Learn More About Us
+                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {/* Card 1: 18M+ Code */}
+              <motion.div
+                whileHover={{ y: -6, scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                className="p-6 rounded-3xl bg-white/95 backdrop-blur-md border border-slate-300 hover:border-blue-500/70 shadow-[0_8px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(44,94,173,0.09)] transition-all duration-300 flex flex-col justify-between space-y-4 relative overflow-hidden group"
+              >
+                <div className="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-gradient-to-br from-blue-500/10 to-transparent blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <div className="flex justify-between items-start">
+                  <div className="p-2.5 rounded-2xl bg-blue-50/70 text-blue-500 border border-blue-100/40 transition-all duration-300 group-hover:scale-110">
+                    <Code className="w-5 h-5" />
+                  </div>
+                  <span className="text-[9px] font-mono text-slate-400 font-bold tracking-wider uppercase select-none">stat // code</span>
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-sky-400 tracking-tight leading-none">18M+</h4>
+                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">Total lines of production code delivered securely</p>
+                </div>
+              </motion.div>
+
+              {/* Card 2: Zero Leaks */}
+              <motion.div
+                whileHover={{ y: -6, scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                className="p-6 rounded-3xl bg-white/95 backdrop-blur-md border border-slate-300 hover:border-emerald-500/70 shadow-[0_8px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(44,94,173,0.09)] transition-all duration-300 flex flex-col justify-between space-y-4 relative overflow-hidden group mt-4"
+              >
+                <div className="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500/10 to-transparent blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <div className="flex justify-between items-start">
+                  <div className="p-2.5 rounded-2xl bg-emerald-50/70 text-emerald-500 border border-emerald-100/40 transition-all duration-300 group-hover:scale-110">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <span className="text-[9px] font-mono text-slate-400 font-bold tracking-wider uppercase select-none">stat // sec</span>
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-400 tracking-tight leading-none">Zero</h4>
+                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">Data leaks or system breach incidents recorded</p>
+                </div>
+              </motion.div>
+
+              {/* Card 3: 45+ Microservices */}
+              <motion.div
+                whileHover={{ y: -6, scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                className="p-6 rounded-3xl bg-white/95 backdrop-blur-md border border-slate-300 hover:border-purple-500/70 shadow-[0_8px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(44,94,173,0.09)] transition-all duration-300 flex flex-col justify-between space-y-4 relative overflow-hidden group"
+              >
+                <div className="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-gradient-to-br from-purple-500/10 to-transparent blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <div className="flex justify-between items-start">
+                  <div className="p-2.5 rounded-2xl bg-purple-50/70 text-purple-500 border border-purple-100/40 transition-all duration-300 group-hover:scale-110">
+                    <Cpu className="w-5 h-5" />
+                  </div>
+                  <span className="text-[9px] font-mono text-slate-400 font-bold tracking-wider uppercase select-none">stat // micro</span>
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-violet-400 tracking-tight leading-none">45+</h4>
+                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">Microservices successfully extracted from monoliths</p>
+                </div>
+              </motion.div>
+
+              {/* Card 4: 24/7 SRE */}
+              <motion.div
+                whileHover={{ y: -6, scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                className="p-6 rounded-3xl bg-white/95 backdrop-blur-md border border-slate-300 hover:border-rose-500/70 shadow-[0_8px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(44,94,173,0.09)] transition-all duration-300 flex flex-col justify-between space-y-4 relative overflow-hidden group mt-4"
+              >
+                <div className="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-gradient-to-br from-rose-500/10 to-transparent blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <div className="flex justify-between items-start">
+                  <div className="p-2.5 rounded-2xl bg-rose-50/70 text-rose-500 border border-rose-100/40 transition-all duration-300 group-hover:scale-110">
+                    <Activity className="w-5 h-5" />
+                  </div>
+                  <span className="text-[9px] font-mono text-slate-400 font-bold tracking-wider uppercase select-none">stat // sre</span>
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-rose-600 to-pink-400 tracking-tight leading-none">24/7</h4>
+                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">SRE monitoring coverage and incident alert setups</p>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Services Grid Section */}
+      <section 
+        ref={servicesContainerRef} 
+        className={isDesktop ? "relative h-[300vh] bg-gradient-to-b from-[#dbe6f2] via-[#0c0f1d] to-[#070913]" : "w-full py-24 bg-gradient-to-b from-[#dbe6f2] via-[#0c0f1d] to-[#070913] border-b border-white/5"}
+      >
+        {!isDesktop ? (
+          /* Standard layout for mobile/tablet */
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
+              <h2 className="text-xs font-black tracking-widest text-[#1591DC] uppercase">Comprehensive IT Solutions</h2>
+              <h3 className="text-3xl sm:text-4xl font-extrabold text-slate-100 tracking-tight">Our Core Services</h3>
+              <p className="text-slate-400 text-sm sm:text-base">
+                From frontend development to high-availability database engineering, we deliver clean systems designed to withstand heavy loads.
+              </p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Object.entries(servicesData).slice(0, 8).map(([slug, data], index) => {
+                const IconComponent = serviceIcons[slug] || Code;
+                const glowClass = serviceGlowClasses[index % serviceGlowClasses.length];
+                return (
+                  <motion.div 
+                    key={slug} 
+                    initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{ duration: 0.5, delay: index * 0.05 }}
+                    className={`p-6 rounded-2xl ${glowClass} flex flex-col justify-between group`}
+                  >
+                    <div className="space-y-4">
+                      <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 group-hover:bg-primary/5 group-hover:text-primary transition-all flex items-center justify-center">
+                        <IconComponent className="w-6 h-6" />
+                      </div>
+                      <h4 className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors">
+                        {data.title}
+                      </h4>
+                      <p className="text-xs text-slate-500 leading-relaxed">
+                        {data.description}
+                      </p>
+                      <ul className="space-y-1.5 pt-2">
+                        {data.features.slice(0, 3).map((f) => (
+                          <li key={f} className="text-[10px] text-slate-500 flex items-center">
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary/40 mr-2 flex-shrink-0"></span>
+                            <span>{f}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="pt-6 mt-6 border-t border-slate-100">
+                      <Link 
+                        href={`/services/${slug}`}
+                        className="inline-flex items-center text-xs font-bold text-primary group-hover:text-secondary transition-colors"
+                      >
+                        Learn More
+                        <ArrowRight className="w-3.5 h-3.5 ml-1.5 group-hover:translate-x-1 transition-transform" />
+                      </Link>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            <div className="text-center mt-12">
+              <Link 
+                href="/services" 
+                className="inline-flex items-center text-sm font-bold text-slate-300 hover:text-white transition-colors group"
+              >
+                View All Services
+                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+          </div>
+        ) : (
+          /* 3D Perspective Circular Carousel for desktop */
+          <div className="sticky top-0 flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-transparent">
+            {/* Background Glow */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.03),transparent_60%)] pointer-events-none" />
+
+            {/* Fading Sticky Header */}
+            <motion.div 
+              style={{ opacity: headerOpacity, y: headerY }}
+              className="absolute top-12 left-0 right-0 z-20 text-center max-w-3xl mx-auto space-y-4 px-4 pointer-events-none"
+            >
+              <h2 className="text-xs font-black tracking-widest text-[#1591DC] uppercase">Comprehensive IT Solutions</h2>
+              <h3 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Our Core Services</h3>
+              <p className="text-slate-400 text-sm sm:text-base">
+                Scroll down to see our core service divisions rotate in 3D perspective.
+              </p>
+            </motion.div>
+
+            {/* 3D Perspective Ring Container */}
+            <div className="carousel-3d-perspective-container">
+              <motion.div 
+                className="carousel-3d-ring"
+                style={{ rotateY, transformStyle: "preserve-3d" }}
+              >
+                {Object.entries(servicesData).slice(0, 8).map(([slug, data], index) => (
+                  <Carousel3dCard 
+                    key={slug} 
+                    slug={slug} 
+                    data={data} 
+                    index={index} 
+                    scrollYProgress={scrollYProgress}
+                    isActive={activeCarouselIndex === index}
+                    onCardClick={handleCardClick}
+                  />
+                ))}
+              </motion.div>
+            </div>
+
+            {/* Dynamic Dot Pagination Indicator */}
+            <div className="absolute bottom-10 left-0 right-0 z-20 flex justify-center gap-3">
+              {Object.entries(servicesData).slice(0, 8).map(([slug, data], index) => {
+                const isActive = activeCarouselIndex === index;
+                return (
+                  <button
+                    key={slug}
+                    onClick={() => handleCardClick(index)}
+                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                      isActive ? "bg-[#1591DC] w-8 shadow-[0_0_10px_rgba(21,145,220,0.6)]" : "bg-white/20 hover:bg-white/45"
+                    }`}
+                    aria-label={`Go to service ${index + 1}`}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* 4. Industries Section (Smooth Gradient Background) */}
+      <section className="relative py-20 bg-gradient-to-b from-[#070913] via-[#edf3f8] to-[#edf3f8] border-b border-slate-200/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
+            <h2 className="text-xs font-black tracking-widest text-[#1591DC] uppercase">Sectors We Empower</h2>
+            <h3 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Serving Businesses Across Every Sector</h3>
+          </div>
+
+          {!isDesktop ? (
+            /* Standard Grid for Mobile/Tablet */
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full">
+              {/* 1. FINTECH: Dark Terminal Theme */}
+              <div 
+                onClick={() => router.push("/solutions/fintech")} 
+                className="sector-custom-card card-fintech" 
+                role="button" 
+                tabIndex={0}
+              >
+                <div className="ft-header">
+                  <div className="ft-dot" style={{ background: "#ff5f56" }}></div>
+                  <div className="ft-dot" style={{ background: "#ffbd2e" }}></div>
+                  <div className="ft-dot" style={{ background: "#27c93f" }}></div>
+                </div>
+                <div className="sector-custom-card-body flex flex-col justify-between h-full">
+                  <div>
+                    <div className="ft-ticker mb-4">
+                      <div className="ft-ticker-line">
+                        <span className="ft-lbl"><span>▲</span>PCI_AUDIT</span>
+                        <span className="ft-val">OK</span>
+                      </div>
+                      <div className="ft-ticker-line">
+                        <span className="ft-lbl">TX_HASH</span>
+                        <span className="ft-val" style={{ color: "#38bdf8", fontSize: "11px" }}>0xf3a…9c2</span>
+                      </div>
+                      <div className="ft-ticker-line">
+                        <span className="ft-lbl">LEDGER</span>
+                        <span className="ft-val">LOCKED</span>
+                      </div>
+                    </div>
+                    <h2 className="sector-custom-card-title text-white">{solutionsData.fintech.title}</h2>
+                    <p className="sector-custom-card-desc text-slate-300 text-xs leading-relaxed">{solutionsData.fintech.description}</p>
+                    
+                    {/* Features list */}
+                    <ul className="space-y-1.5 my-4">
+                      {solutionsData.fintech.features.slice(0, 3).map((feat, idx) => (
+                        <li key={idx} className="text-[10px] text-slate-300 flex items-start gap-1.5">
+                          <Check className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    {/* Metrics Row */}
+                    <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-4 mt-2">
+                      {solutionsData.fintech.metrics.map((m, idx) => (
+                        <div key={idx} className="text-center bg-[#070d18] border border-white/5 p-2 rounded-xl">
+                          <span className="text-[9px] font-bold text-slate-400 block truncate">{m.label}</span>
+                          <span className="text-xs font-black text-sky-400 block mt-0.5">{m.value}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Tech stack badges */}
+                    <div className="flex flex-wrap gap-1.5 mt-4">
+                      {solutionsData.fintech.techStack.map((tech) => (
+                        <span key={tech} className="ft-tech-badge text-[9px] px-2 py-0.5 rounded bg-white/5 text-sky-300 border border-white/10">{tech}</span>
+                      ))}
+                    </div>
+
+                    <div className="sector-custom-card-link text-sky-400 mt-6 inline-flex items-center gap-1.5 text-xs font-bold">
+                      Explore Solution
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="3" y1="8" x2="13" y2="8" />
+                        <polyline points="9 4 13 8 9 12" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. HEALTHCARE: Clinical Soft Theme */}
+              <div 
+                onClick={() => router.push("/solutions/healthcare")} 
+                className="sector-custom-card card-health" 
+                role="button" 
+                tabIndex={0}
+              >
+                <div className="hc-strip"></div>
+                <div className="sector-custom-card-body flex flex-col justify-between h-full">
+                  <div>
+                    <div className="hc-pulse mb-4">
+                      <div className="hc-cross">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                        </svg>
+                      </div>
+                      <span className="hc-badge">HIPAA ready</span>
+                    </div>
+                    <h2 className="sector-custom-card-title text-slate-900">{solutionsData.healthcare.title}</h2>
+                    <p className="sector-custom-card-desc text-slate-600 text-xs leading-relaxed">{solutionsData.healthcare.description}</p>
+                    
+                    {/* Features list */}
+                    <ul className="space-y-1.5 my-4">
+                      {solutionsData.healthcare.features.slice(0, 3).map((feat, idx) => (
+                        <li key={idx} className="text-[10px] text-slate-600 flex items-start gap-1.5">
+                          <Check className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    {/* Metrics Row */}
+                    <div className="grid grid-cols-3 gap-2 border-t border-slate-200 pt-4 mt-2">
+                      {solutionsData.healthcare.metrics.map((m, idx) => (
+                        <div key={idx} className="text-center bg-[#edfcf7] border border-[#1D9E75]/10 p-2 rounded-xl">
+                          <span className="text-[9px] font-bold text-slate-500 block truncate">{m.label}</span>
+                          <span className="text-xs font-black text-[#1D9E75] block mt-0.5">{m.value}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Tech stack badges */}
+                    <div className="flex flex-wrap gap-1.5 mt-4">
+                      {solutionsData.healthcare.techStack.map((tech) => (
+                        <span key={tech} className="hc-tech-badge text-[9px] px-2 py-0.5 rounded bg-[#E1F5EE] text-[#0F6E56] border border-[#1D9E75]/20">{tech}</span>
+                      ))}
+                    </div>
+
+                    <div className="sector-custom-card-link text-[#0F6E56] mt-6 inline-flex items-center gap-1.5 text-xs font-bold">
+                      Explore Solution
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="3" y1="8" x2="13" y2="8" />
+                        <polyline points="9 4 13 8 9 12" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. SAAS: Infra Dashboard Theme */}
+              <div 
+                onClick={() => router.push("/solutions/saas")} 
+                className="sector-custom-card card-saas" 
+                role="button" 
+                tabIndex={0}
+              >
+                <div className="saas-header">
+                  <div className="saas-dots">
+                    <div className="saas-dot"></div>
+                    <div className="saas-dot"></div>
+                    <div className="saas-dot"></div>
+                  </div>
+                  <div className="saas-live">
+                    <div className="saas-ping"></div>
+                    <span className="saas-live-txt">LIVE</span>
+                  </div>
+                </div>
+                <div className="sector-custom-card-body flex flex-col justify-between h-full">
+                  <div>
+                    <div className="saas-bars mb-4 !p-0">
+                      <div className="saas-bar" style={{ height: "35%" }}></div>
+                      <div className="saas-bar" style={{ height: "55%" }}></div>
+                      <div className="saas-bar" style={{ height: "30%" }}></div>
+                      <div className="saas-bar" style={{ height: "85%" }}></div>
+                      <div className="saas-bar" style={{ height: "60%" }}></div>
+                      <div className="saas-bar" style={{ height: "45%" }}></div>
+                    </div>
+                    <h2 className="sector-custom-card-title text-slate-900">{solutionsData.saas.title}</h2>
+                    <p className="sector-custom-card-desc text-slate-600 text-xs leading-relaxed">{solutionsData.saas.description}</p>
+                    
+                    {/* Features list */}
+                    <ul className="space-y-1.5 my-4">
+                      {solutionsData.saas.features.slice(0, 3).map((feat, idx) => (
+                        <li key={idx} className="text-[10px] text-slate-600 flex items-start gap-1.5">
+                          <Check className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    {/* Metrics Row */}
+                    <div className="grid grid-cols-3 gap-2 border-t border-slate-300 pt-4 mt-2">
+                      {solutionsData.saas.metrics.map((m, idx) => (
+                        <div key={idx} className="text-center bg-[#EEEDFE] border border-[#534AB7]/10 p-2 rounded-xl">
+                          <span className="text-[9px] font-bold text-slate-500 block truncate">{m.label}</span>
+                          <span className="text-xs font-black text-[#534AB7] block mt-0.5">{m.value}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Tech stack badges */}
+                    <div className="flex flex-wrap gap-1.5 mt-4">
+                      {solutionsData.saas.techStack.map((tech) => (
+                        <span key={tech} className="saas-tech-badge text-[9px] px-2 py-0.5 rounded bg-[#CECBF6] text-[#26215C] border border-[#AFA9EC]/20">{tech}</span>
+                      ))}
+                    </div>
+
+                    <div className="sector-custom-card-link text-[#534AB7] mt-6 inline-flex items-center gap-1.5 text-xs font-bold">
+                      Explore Solution
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="3" y1="8" x2="13" y2="8" />
+                        <polyline points="9 4 13 8 9 12" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. RETAIL: Warm Amber Theme */}
+              <div 
+                onClick={() => router.push("/solutions/retail")} 
+                className="sector-custom-card card-retail" 
+                role="button" 
+                tabIndex={0}
+              >
+                <div className="ret-header">
+                  <span className="ret-tag">Live orders</span>
+                  <span className="ret-count">{orderCount.toLocaleString()}</span>
+                </div>
+                <div className="sector-custom-card-body flex flex-col justify-between h-full">
+                  <div>
+                    <div className="ret-shelf mb-4 !p-0">
+                      <div className="ret-item">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="9" cy="21" r="1" />
+                          <circle cx="20" cy="21" r="1" />
+                          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                        </svg>
+                      </div>
+                      <div className="ret-item">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="1" y="3" width="15" height="13" />
+                          <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                          <circle cx="5.5" cy="18.5" r="2.5" />
+                          <circle cx="18.5" cy="18.5" r="2.5" />
+                        </svg>
+                      </div>
+                      <div className="ret-item">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 21h18" />
+                          <path d="M3 7l1 4h16l1-4" />
+                          <path d="M4 11v10" />
+                          <path d="M20 11v10" />
+                          <path d="M9 21v-4a3 3 0 0 1 6 0v4" />
+                        </svg>
+                      </div>
+                    </div>
+                    <h2 className="sector-custom-card-title text-slate-900">{solutionsData.retail.title}</h2>
+                    <p className="sector-custom-card-desc text-slate-600 text-xs leading-relaxed">{solutionsData.retail.description}</p>
+                    
+                    {/* Features list */}
+                    <ul className="space-y-1.5 my-4">
+                      {solutionsData.retail.features.slice(0, 3).map((feat, idx) => (
+                        <li key={idx} className="text-[10px] text-slate-600 flex items-start gap-1.5">
+                          <Check className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    {/* Metrics Row */}
+                    <div className="grid grid-cols-3 gap-2 border-t border-slate-300 pt-4 mt-2">
+                      {solutionsData.retail.metrics.map((m, idx) => (
+                        <div key={idx} className="text-center bg-[#FAEEDA] border border-[#BA7517]/10 p-2 rounded-xl">
+                          <span className="text-[9px] font-bold text-slate-500 block truncate">{m.label}</span>
+                          <span className="text-xs font-black text-[#BA7517] block mt-0.5">{m.value}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Tech stack badges */}
+                    <div className="flex flex-wrap gap-1.5 mt-4">
+                      {solutionsData.retail.techStack.map((tech) => (
+                        <span key={tech} className="ret-tech-badge text-[9px] px-2 py-0.5 rounded bg-[#FAEEDA] text-[#412402] border border-[#FAC775]/20">{tech}</span>
+                      ))}
+                    </div>
+
+                    <div className="sector-custom-card-link text-[#BA7517] mt-6 inline-flex items-center gap-1.5 text-xs font-bold">
+                      Explore Solution
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="3" y1="8" x2="13" y2="8" />
+                        <polyline points="9 4 13 8 9 12" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Expanding Accordion for Desktop */
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.6 }}
+              className="sectors-accordion-container"
+            >
+              {/* 1. FINTECH */}
+              <div 
+                onClick={() => setActiveSectorIndex(0)}
+                className={`sector-accordion-card card-fintech ${activeSectorIndex === 0 ? 'active' : 'collapsed'}`}
+              >
+                <div className="collapsed-content">
+                  <span className="collapsed-number">01</span>
+                  <div className="collapsed-icon-wrapper">
+                    <CreditCard className="w-5 h-5" />
+                  </div>
+                  <span className="collapsed-title-rotated">FinTech</span>
+                </div>
+                <div className="expanded-content">
+                  <div className="ft-header">
+                    <div className="ft-dot" style={{ background: "#ff5f56" }}></div>
+                    <div className="ft-dot" style={{ background: "#ffbd2e" }}></div>
+                    <div className="ft-dot" style={{ background: "#27c93f" }}></div>
+                  </div>
+                  <div className="sector-custom-card-body flex flex-row gap-6 p-6">
+                    <div className="sector-left-col flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="ft-ticker mb-4">
+                          <div className="ft-ticker-line">
+                            <span className="ft-lbl"><span>▲</span>PCI_AUDIT</span>
+                            <span className="ft-val">OK</span>
+                          </div>
+                          <div className="ft-ticker-line">
+                            <span className="ft-lbl">TX_HASH</span>
+                            <span className="ft-val" style={{ color: "#38bdf8", fontSize: "11px" }}>0xf3a…9c2</span>
+                          </div>
+                          <div className="ft-ticker-line">
+                            <span className="ft-lbl">LEDGER</span>
+                            <span className="ft-val">LOCKED</span>
+                          </div>
+                        </div>
+                        <h2 className="sector-custom-card-title text-white">{solutionsData.fintech.title}</h2>
+                        <p className="sector-custom-card-desc text-slate-300 text-xs leading-relaxed">{solutionsData.fintech.description}</p>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        {solutionsData.fintech.techStack.map((tech) => (
+                          <span key={tech} className="ft-tech-badge text-[10px] px-2 py-1 rounded bg-white/5 text-sky-300 border border-white/10">{tech}</span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="sector-right-col w-[240px] flex flex-col justify-between border-l border-white/10 pl-6">
+                      <div className="space-y-4">
+                        <span className="text-[10px] font-bold text-sky-400 tracking-wider uppercase block">Key Metrics</span>
+                        <div className="grid grid-cols-1 gap-2.5">
+                          {solutionsData.fintech.metrics.map((m, idx) => (
+                            <div key={idx} className="metric-box bg-[#070d18] border border-white/5 p-2 rounded-xl flex items-center justify-between">
+                              <span className="text-xs font-bold text-[#e2e8f0]">{m.label}</span>
+                              <span className="text-sm font-black text-sky-400">{m.value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3 mt-4">
+                        <span className="text-[10px] font-bold text-sky-400 tracking-wider uppercase block">Key Features</span>
+                        <ul className="space-y-1.5">
+                          {solutionsData.fintech.features.slice(0, 3).map((feat, idx) => (
+                            <li key={idx} className="text-[10px] text-slate-300 flex items-start gap-1.5">
+                              <Check className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                              <span>{feat}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <Link href="/solutions/fintech" className="sector-custom-card-link text-sky-400 hover:text-sky-300 mt-6 inline-flex items-center gap-1.5 text-xs font-bold">
+                        Explore Solution
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="3" y1="8" x2="13" y2="8" />
+                          <polyline points="9 4 13 8 9 12" />
+                        </svg>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. HEALTHCARE */}
+              <div 
+                onClick={() => setActiveSectorIndex(1)}
+                className={`sector-accordion-card card-health ${activeSectorIndex === 1 ? 'active' : 'collapsed'}`}
+              >
+                <div className="collapsed-content">
+                  <span className="collapsed-number">02</span>
+                  <div className="collapsed-icon-wrapper">
+                    <Heart className="w-5 h-5" />
+                  </div>
+                  <span className="collapsed-title-rotated">Healthcare</span>
+                </div>
+                <div className="expanded-content">
+                  <div className="hc-strip"></div>
+                  <div className="sector-custom-card-body flex flex-row gap-6 p-6">
+                    <div className="sector-left-col flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="hc-pulse mb-4">
+                          <div className="hc-cross">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                            </svg>
+                          </div>
+                          <span className="hc-badge">HIPAA ready</span>
+                        </div>
+                        <h2 className="sector-custom-card-title text-slate-900">{solutionsData.healthcare.title}</h2>
+                        <p className="sector-custom-card-desc text-slate-600 text-xs leading-relaxed">{solutionsData.healthcare.description}</p>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        {solutionsData.healthcare.techStack.map((tech) => (
+                          <span key={tech} className="hc-tech-badge text-[10px] px-2 py-1 rounded bg-[#E1F5EE] text-[#0F6E56] border border-[#1D9E75]/20">{tech}</span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="sector-right-col w-[240px] flex flex-col justify-between border-l border-slate-200 pl-6">
+                      <div className="space-y-4">
+                        <span className="text-[10px] font-bold text-[#0F6E56] tracking-wider uppercase block">Key Metrics</span>
+                        <div className="grid grid-cols-1 gap-2.5">
+                          {solutionsData.healthcare.metrics.map((m, idx) => (
+                            <div key={idx} className="metric-box bg-[#edfcf7] border border-[#1D9E75]/10 p-2 rounded-xl flex items-center justify-between">
+                              <span className="text-xs font-bold text-slate-700">{m.label}</span>
+                              <span className="text-sm font-black text-[#1D9E75]">{m.value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3 mt-4">
+                        <span className="text-[10px] font-bold text-[#0F6E56] tracking-wider uppercase block">Key Features</span>
+                        <ul className="space-y-1.5">
+                          {solutionsData.healthcare.features.slice(0, 3).map((feat, idx) => (
+                            <li key={idx} className="text-[10px] text-slate-600 flex items-start gap-1.5">
+                              <Check className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                              <span>{feat}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <Link href="/solutions/healthcare" className="sector-custom-card-link text-[#0F6E56] hover:text-[#0c5946] mt-6 inline-flex items-center gap-1.5 text-xs font-bold">
+                        Explore Solution
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="3" y1="8" x2="13" y2="8" />
+                          <polyline points="9 4 13 8 9 12" />
+                        </svg>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. SAAS */}
+              <div 
+                onClick={() => setActiveSectorIndex(2)}
+                className={`sector-accordion-card card-saas ${activeSectorIndex === 2 ? 'active' : 'collapsed'}`}
+              >
+                <div className="collapsed-content">
+                  <span className="collapsed-number">03</span>
+                  <div className="collapsed-icon-wrapper">
+                    <Cloud className="w-5 h-5" />
+                  </div>
+                  <span className="collapsed-title-rotated">SaaS</span>
+                </div>
+                <div className="expanded-content">
+                  <div className="saas-header">
+                    <div className="saas-dots">
+                      <div className="saas-dot"></div>
+                      <div className="saas-dot"></div>
+                      <div className="saas-dot"></div>
+                    </div>
+                    <div className="saas-live">
+                      <div className="saas-ping"></div>
+                      <span className="saas-live-txt">LIVE</span>
+                    </div>
+                  </div>
+                  <div className="sector-custom-card-body flex flex-row gap-6 p-6">
+                    <div className="sector-left-col flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="saas-bars mb-4 !p-0">
+                          <div className="saas-bar" style={{ height: "35%" }}></div>
+                          <div className="saas-bar" style={{ height: "55%" }}></div>
+                          <div className="saas-bar" style={{ height: "30%" }}></div>
+                          <div className="saas-bar" style={{ height: "85%" }}></div>
+                          <div className="saas-bar" style={{ height: "60%" }}></div>
+                          <div className="saas-bar" style={{ height: "45%" }}></div>
+                        </div>
+                        <h2 className="sector-custom-card-title text-white">{solutionsData.saas.title}</h2>
+                        <p className="sector-custom-card-desc text-slate-300 text-xs leading-relaxed">{solutionsData.saas.description}</p>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        {solutionsData.saas.techStack.map((tech) => (
+                          <span key={tech} className="saas-tech-badge text-[10px] px-2 py-1 rounded bg-white/5 text-purple-300 border border-white/10">{tech}</span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="sector-right-col w-[240px] flex flex-col justify-between border-l border-white/10 pl-6">
+                      <div className="space-y-4">
+                        <span className="text-[10px] font-bold text-purple-300 tracking-wider uppercase block">Key Metrics</span>
+                        <div className="grid grid-cols-1 gap-2.5">
+                          {solutionsData.saas.metrics.map((m, idx) => (
+                            <div key={idx} className="metric-box bg-[#1b173c] border border-white/5 p-2 rounded-xl flex items-center justify-between">
+                              <span className="text-xs font-bold text-[#e2e8f0]">{m.label}</span>
+                              <span className="text-sm font-black text-purple-300">{m.value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3 mt-4">
+                        <span className="text-[10px] font-bold text-purple-300 tracking-wider uppercase block">Key Features</span>
+                        <ul className="space-y-1.5">
+                          {solutionsData.saas.features.slice(0, 3).map((feat, idx) => (
+                            <li key={idx} className="text-[10px] text-slate-300 flex items-start gap-1.5">
+                              <Check className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                              <span>{feat}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <Link href="/solutions/saas" className="sector-custom-card-link text-purple-300 hover:text-purple-200 mt-6 inline-flex items-center gap-1.5 text-xs font-bold">
+                        Explore Solution
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="3" y1="8" x2="13" y2="8" />
+                          <polyline points="9 4 13 8 9 12" />
+                        </svg>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. RETAIL */}
+              <div 
+                onClick={() => setActiveSectorIndex(3)}
+                className={`sector-accordion-card card-retail ${activeSectorIndex === 3 ? 'active' : 'collapsed'}`}
+              >
+                <div className="collapsed-content">
+                  <span className="collapsed-number">04</span>
+                  <div className="collapsed-icon-wrapper">
+                    <ShoppingCart className="w-5 h-5" />
+                  </div>
+                  <span className="collapsed-title-rotated">Retail</span>
+                </div>
+                <div className="expanded-content">
+                  <div className="ret-header">
+                    <span className="ret-tag">Live orders</span>
+                    <span className="ret-count">{orderCount.toLocaleString()}</span>
+                  </div>
+                  <div className="sector-custom-card-body flex flex-row gap-6 p-6">
+                    <div className="sector-left-col flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="ret-shelf mb-4 !p-0">
+                          <div className="ret-item">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="9" cy="21" r="1" />
+                              <circle cx="20" cy="21" r="1" />
+                              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                            </svg>
+                          </div>
+                          <div className="ret-item">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="1" y="3" width="15" height="13" />
+                              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                              <circle cx="5.5" cy="18.5" r="2.5" />
+                              <circle cx="18.5" cy="18.5" r="2.5" />
+                            </svg>
+                          </div>
+                          <div className="ret-item">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M3 21h18" />
+                              <path d="M3 7l1 4h16l1-4" />
+                              <path d="M4 11v10" />
+                              <path d="M20 11v10" />
+                              <path d="M9 21v-4a3 3 0 0 1 6 0v4" />
+                            </svg>
+                          </div>
+                        </div>
+                        <h2 className="sector-custom-card-title text-white">{solutionsData.retail.title}</h2>
+                        <p className="sector-custom-card-desc text-slate-300 text-xs leading-relaxed">{solutionsData.retail.description}</p>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        {solutionsData.retail.techStack.map((tech) => (
+                          <span key={tech} className="ret-tech-badge text-[10px] px-2 py-1 rounded bg-white/5 text-amber-300 border border-white/10">{tech}</span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="sector-right-col w-[240px] flex flex-col justify-between border-l border-white/10 pl-6">
+                      <div className="space-y-4">
+                        <span className="text-[10px] font-bold text-amber-300 tracking-wider uppercase block">Key Metrics</span>
+                        <div className="grid grid-cols-1 gap-2.5">
+                          {solutionsData.retail.metrics.map((m, idx) => (
+                            <div key={idx} className="metric-box bg-[#381f03] border border-white/5 p-2 rounded-xl flex items-center justify-between">
+                              <span className="text-xs font-bold text-[#e2e8f0]">{m.label}</span>
+                              <span className="text-sm font-black text-amber-300">{m.value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3 mt-4">
+                        <span className="text-[10px] font-bold text-amber-300 tracking-wider uppercase block">Key Features</span>
+                        <ul className="space-y-1.5">
+                          {solutionsData.retail.features.slice(0, 3).map((feat, idx) => (
+                            <li key={idx} className="text-[10px] text-slate-300 flex items-start gap-1.5">
+                              <Check className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                              <span>{feat}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <Link href="/solutions/retail" className="sector-custom-card-link text-amber-300 hover:text-amber-200 mt-6 inline-flex items-center gap-1.5 text-xs font-bold">
+                        Explore Solution
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="3" y1="8" x2="13" y2="8" />
+                          <polyline points="9 4 13 8 9 12" />
+                        </svg>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </section>
+
+      {/* 5. How We Work (Process) Section (Smooth Gradient Background) */}
+      <section className="relative py-24 bg-gradient-to-b from-[#0f152d] via-[#101323] to-[#060914] border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-6">
+            <h2 className="text-xs font-black tracking-widest text-sky-400 uppercase font-mono">Our Process</h2>
+          </div>
+
+          <div className="stacking-cards-section">
+            <div className="sticky-heading-wrapper">
+              <h3 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                How we work with you in 3 simple steps
+              </h3>
+            </div>
+
+            <div className="stacking-cards-container">
+              
+              {/* Card 1 */}
+              <div className="stacking-card stacking-card-1" id="step-card-1" role="button" tabIndex={0}>
+                <div className="stacking-card-glow"></div>
+                <div className="stacking-card-content">
+                  <div className="stacking-card-left">
+                    <span className="stacking-card-num">01</span>
+                    <span className="stacking-card-badge">STRATEGY</span>
+                    <h2>Discovery & Planning</h2>
+                    <p>We deep-dive into your operational pipeline, audit systems infrastructure, and lay down an exhaustive software blueprint.</p>
+                    <ul className="stacking-card-features">
+                      <li><span className="stacking-bullet"></span> Audit of systems and database structures</li>
+                      <li><span className="stacking-bullet"></span> Comprehensive software blueprints</li>
+                      <li><span className="stacking-bullet"></span> Strategic transition roadmap</li>
+                    </ul>
+                    <a href="/contact" className="stacking-card-btn">Explore Strategy Blueprint</a>
+                  </div>
+                  <div className="stacking-card-right relative w-full h-full p-6">
+                    <div className="relative w-full h-full rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+                      <Image 
+                        src="/assets/images/Process/plan.png"
+                        alt="Discovery & Planning Strategy"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 400px"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2 */}
+              <div className="stacking-card stacking-card-2" id="step-card-2" role="button" tabIndex={0}>
+                <div className="stacking-card-glow"></div>
+                <div className="stacking-card-content">
+                  <div className="stacking-card-left">
+                    <span className="stacking-card-num">02</span>
+                    <span className="stacking-card-badge">DEVELOPMENT</span>
+                    <h2>Design & Development</h2>
+                    <p>Our engineers build iterative cloud-native components and secure APIs, verifying code quality through automation.</p>
+                    <ul className="stacking-card-features">
+                      <li><span className="stacking-bullet"></span> Cloud-native architecture design</li>
+                      <li><span className="stacking-bullet"></span> Test-driven microservice creation</li>
+                      <li><span className="stacking-bullet"></span> Automated CI/CD verification pipelines</li>
+                    </ul>
+                    <a href="/contact" className="stacking-card-btn">View Development Sandbox</a>
+                  </div>
+                  <div className="stacking-card-right relative w-full h-full p-6">
+                    <div className="relative w-full h-full rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+                      <Image 
+                        src="/assets/images/Process/design.png"
+                        alt="Design & Development"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 400px"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 3 */}
+              <div className="stacking-card stacking-card-3" id="step-card-3" role="button" tabIndex={0}>
+                <div className="stacking-card-glow"></div>
+                <div className="stacking-card-content">
+                  <div className="stacking-card-left">
+                    <span className="stacking-card-num">03</span>
+                    <span className="stacking-card-badge">DEPLOYMENT</span>
+                    <h2>Launch & Scale</h2>
+                    <p>We coordinate zero-downtime Strangler deployments and wire up 24/7 reliability monitoring for elastic loads.</p>
+                    <ul className="stacking-card-features">
+                      <li><span className="stacking-bullet"></span> Zero-downtime blue-green rollouts</li>
+                      <li><span className="stacking-bullet"></span> 24/7 reliability/incident alerting setup</li>
+                      <li><span className="stacking-bullet"></span> Auto-scaling Kubernetes infrastructure</li>
+                    </ul>
+                    <a href="/contact" className="stacking-card-btn">Access Operations Portal</a>
+                  </div>
+                  <div className="stacking-card-right relative w-full h-full p-6">
+                    <div className="relative w-full h-full rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+                      <Image 
+                        src="/assets/images/Process/launch.png"
+                        alt="Launch & Scale"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 400px"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. Results / Stats Section (Cyber HUD / Cybernetic Midnight Theme) */}
+      <section className="relative py-20 bg-gradient-to-b from-[#060914] via-[#0d091e] to-[#06070d] border-b border-white/5 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
+            <h2 className="text-xs font-black tracking-widest text-[#1591DC] uppercase">Proven Track Record</h2>
+            <h3 className="text-3xl sm:text-4xl font-extrabold text-slate-100 tracking-tight">Proven results that speak for themselves</h3>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {stats.map((st, index) => {
+              const Icon = st.icon;
+              return (
+                <motion.div 
+                  key={st.label} 
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-40px" }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className={`cyber-hud-card cyber-card-${index} relative p-8 rounded-3xl text-center flex flex-col items-center justify-between overflow-hidden group`}
+                >
+                  {/* Cyber Grid overlay */}
+                  <div className="absolute inset-0 cyber-grid-overlay opacity-[0.03] group-hover:opacity-[0.07] transition-opacity pointer-events-none" />
+                  
+                  {/* Decorative Sci-Fi corner lines */}
+                  <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-white/10 group-hover:border-white/30 transition-colors pointer-events-none" />
+                  <div className="absolute top-2 right-2 w-3 h-3 border-t border-r border-white/10 group-hover:border-white/30 transition-colors pointer-events-none" />
+                  <div className="absolute bottom-2 left-2 w-3 h-3 border-b border-l border-white/10 group-hover:border-white/30 transition-colors pointer-events-none" />
+                  <div className="absolute bottom-2 right-2 w-3 h-3 border-b border-r border-white/10 group-hover:border-white/30 transition-colors pointer-events-none" />
+
+                  {/* Top status bar */}
+                  <div className="w-full flex justify-between items-center text-[8px] font-mono text-slate-500 mb-4 border-b border-white/5 pb-2">
+                    <span>SYS_CORE // REF_{index+1}</span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      ACTIVE
+                    </span>
+                  </div>
+
+                  <div className="w-14 h-14 rounded-2xl bg-slate-950 border border-white/5 group-hover:border-white/20 text-[#1591DC] flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-105 mb-2">
+                    <Icon className="w-7 h-7 stats-icon-glow" />
+                  </div>
+                  
+                  <div className="space-y-1 my-4">
+                    <h4 className="text-4xl md:text-5xl font-black font-mono tracking-tight stats-num-glow">{st.number}</h4>
+                    <p className="text-[10px] font-mono font-bold uppercase tracking-widest stats-label-glow">{st.label}</p>
+                  </div>
+                  
+                  <div className="space-y-1 border-t border-white/5 pt-4 w-full">
+                    <h5 className="text-xs font-bold text-slate-200 group-hover:text-white transition-colors">{st.heading}</h5>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">{st.desc}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* 7. Engagement / Pricing Models Section (Premium Pricing Theme) */}
+      <section className="relative w-full py-24 bg-gradient-to-b from-[#06070d] via-[#0f1225] to-[#070913] border-b border-white/5 overflow-hidden flex flex-col items-center">
+        {/* Color-matched Ambient Glow Spheres in Background */}
+        <div className="absolute top-1/2 left-[20%] -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse-slow"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-purple-500/10 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse-slow"></div>
+        <div className="absolute top-1/2 left-[80%] -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse-slow"></div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center w-full relative z-10">
+          <div className="text-center max-w-3xl mx-auto space-y-4 mb-10 flex flex-col items-center">
+            <h3 className="text-3xl sm:text-4xl font-extrabold text-slate-100 tracking-tight">Plans and Pricing</h3>
+            <p className="text-slate-400 text-sm sm:text-base max-w-2xl text-center">
+              Choose a plan that fits your investment goals, whether you're just starting or scaling your portfolio.
+            </p>
+          
+          {/* Billing Toggle Switch */}
+          <div className="pr-toggle-container">
+            <button 
+              className={`pr-toggle-btn ${!isAnnual ? "active" : ""}`} 
+              onClick={() => setIsAnnual(false)}
+            >
+              Bill Monthly
+            </button>
+            <button 
+              className={`pr-toggle-btn ${isAnnual ? "active" : ""}`} 
+              onClick={() => setIsAnnual(true)}
+            >
+              Bill Annually
+            </button>
+            <div 
+              className="pr-toggle-slider" 
+              style={{ transform: isAnnual ? 'translateX(100%)' : 'translateX(0)' }}
+            ></div>
+          </div>
+        </div>
+
+        {/* Pricing Grid */}
+        <div className="pr-grid">
+          
+          {/* Free Plan Card */}
+          <div className="pr-card free-plan">
+            <div className="pr-card-glow"></div>
+            <div className="card-header">
+              <div className="pr-icon-container">
+                <svg className="pr-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4" fill="#3b82f6" opacity="0.3"/><rect x="6" y="6" width="12" height="12" rx="2" fill="#3b82f6"/></svg>
+              </div>
+              <span className="pr-plan-name">Free Plan</span>
+              <div className="pr-price-container">
+                <span className="pr-currency">$</span>
+                <span className="pr-price-amount">0</span>
+                <span className="pr-billing-period">/month</span>
+              </div>
+              <p className="pr-plan-desc">For beginners to explore our platform and start their investment journey.</p>
+            </div>
+            <div className="pr-card-action">
+              <Link href="/contact" className="pr-btn-secondary block">Start for Free</Link>
+            </div>
+            <div className="pr-card-divider">
+              <span>STAND OUT FEATURES</span>
+            </div>
+            <ul className="pr-features-list">
+              <li>
+                <svg className="pr-check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span>Track up to 5 stocks</span>
+              </li>
+              <li>
+                <svg className="pr-check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span>Access to real-time stock prices.</span>
+              </li>
+              <li>
+                <svg className="pr-check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span>Mobile access for tracking on-the-go.</span>
+              </li>
+              <li>
+                <svg className="pr-check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span>Basic investment insights</span>
+              </li>
+              <li>
+                <svg className="pr-check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span>Limited watchlist management.</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Pro Plan Card (Popular) */}
+          <div className="pr-card pro-plan popular">
+            <div className="pr-card-glow"></div>
+            <div className="card-header">
+              <div className="header-row">
+                <div className="pr-icon-container">
+                  <svg className="pr-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4" fill="#ffffff" opacity="0.3"/><rect x="6" y="6" width="12" height="12" rx="2" fill="#ffffff"/></svg>
+                </div>
+                <span className="pr-badge-popular">
+                  <svg className="pr-star-mini" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="currentColor"/></svg>
+                  POPULAR
+                </span>
+              </div>
+              <span className="pr-plan-name">Pro Plan</span>
+              <div className="pr-price-container">
+                <span className="pr-currency">$</span>
+                <span className="pr-price-amount">{isAnnual ? 64 : 80}</span>
+                <span className="pr-billing-period">/month</span>
+              </div>
+              <p className="pr-plan-desc">For active investors who want advanced tools to grow their portfolio.</p>
+            </div>
+            <div className="pr-card-action">
+              <Link href="/contact" className="pr-btn-primary block">Start Free 7 Days Trial</Link>
+            </div>
+            <div className="pr-card-divider">
+              <span>STAND OUT FEATURES</span>
+            </div>
+            <ul className="pr-features-list">
+              <li>
+                <svg className="pr-check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span>Track unlimited stocks</span>
+              </li>
+              <li>
+                <svg className="pr-check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span>Advanced analytics and performance</span>
+              </li>
+              <li>
+                <svg className="pr-check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span>Custom alerts for price movements</span>
+              </li>
+              <li>
+                <svg className="pr-check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span>Expert-curated stock selections</span>
+              </li>
+              <li>
+                <svg className="pr-check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span>Priority support assistance.</span>
+              </li>
+              <li>
+                <svg className="pr-check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span>Export data to CSV/PDF</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Advance Plan Card */}
+          <div className="pr-card advance-plan">
+            <div className="pr-card-glow"></div>
+            <div className="card-header">
+              <div className="pr-icon-container">
+                <svg className="pr-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4" fill="#10b981" opacity="0.3"/><rect x="6" y="6" width="12" height="12" rx="2" fill="#10b981"/></svg>
+              </div>
+              <span className="pr-plan-name">Advance Plan</span>
+              <div className="pr-price-container">
+                <span className="pr-price-amount custom-text">Custom</span>
+              </div>
+              <p className="pr-plan-desc">For institutions or high-net-worth individuals seeking tailored solutions.</p>
+            </div>
+            <div className="pr-card-action">
+              <Link href="/contact" className="pr-btn-secondary block">Contact Us</Link>
+            </div>
+            <div className="pr-card-divider">
+              <span>STAND OUT FEATURES</span>
+            </div>
+            <ul className="pr-features-list">
+              <li>
+                <svg className="pr-check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span>Dedicated account manager</span>
+              </li>
+              <li>
+                <svg className="pr-check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span>Customizable investment tools</span>
+              </li>
+              <li>
+                <svg className="pr-check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span>Integration with third-party systems</span>
+              </li>
+              <li>
+                <svg className="pr-check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span>Advanced AI-driven insights</span>
+              </li>
+              <li>
+                <svg className="pr-check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span>Team collaboration tools</span>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+
+        {/* Bottom Notice */}
+        <div className="pr-bottom-notice">
+          Start your journey risk free - No credit card needed
+        </div>
+        </div>
+      </section>
+
+      {/* 8. Testimonials Section (Dark Theme with Glows - Matching the Prototype Link) */}
+      <section className="relative bg-[#070913] py-20 overflow-hidden border-b border-white/5">
+        {/* Subtle background glow highlights */}
+        <div className="absolute top-0 left-1/4 w-[350px] h-[350px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none -z-10 animate-pulse-slow"></div>
+        <div className="absolute bottom-0 right-1/4 w-[350px] h-[350px] bg-[#1591DC]/10 rounded-full blur-[100px] pointer-events-none -z-10 animate-pulse-slow"></div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
+            <h2 className="text-xs font-black tracking-widest text-[#1591DC] uppercase">Client Feedback</h2>
+            <h3 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">What our clients say about working with us</h3>
+          </div>
+
+          <div className="carousel-viewport-wrapper">
+            <div 
+              className="carousel-viewport"
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+            >
+              <div 
+                ref={trackRef}
+                className="carousel-track"
+                style={{
+                  transform: `translateX(${translateX}px)`,
+                  transition: useTransition ? "transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)" : "none"
+                }}
+              >
+                {reviews.map((t) => (
+                  <div 
+                    key={t.id}
+                    className="review-card group"
+                    data-index={t.id}
+                  >
+                    <div className="flex justify-between items-start">
+                      <Quote className="w-7 h-7 text-[#1591DC]/20" />
+                      <div className="flex items-center space-x-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <Star 
+                            key={i} 
+                            className={`w-3.5 h-3.5 ${i < t.stars ? "fill-[#fbbf24] text-[#fbbf24] filter drop-shadow-[0_0_4px_rgba(251,191,36,0.2)]" : "text-slate-700"}`} 
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="review-text text-slate-200 italic">"{t.q}"</p>
+                    <div className="flex items-center gap-4 mt-2">
+                      <div className={`avatar ${t.avatarClass} w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-sm shadow-md`}>
+                        {t.initials}
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <h4 className="text-sm font-bold text-white">{t.name}</h4>
+                        <p className="text-xs text-slate-400">{t.role}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="carousel-controls">
+              <button 
+                className="carousel-control-btn" 
+                onClick={slidePrev}
+                aria-label="Previous review"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                </svg>
+              </button>
+              
+              <div className="carousel-dots">
+                {testimonials.map((t) => {
+                  const isActive = reviews[0]?.id === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      className={`carousel-dot ${isActive ? "active" : ""}`}
+                      onClick={() => navigateToCardIndex(t.id)}
+                      aria-label={`Go to review ${t.id}`}
+                    />
+                  );
+                })}
+              </div>
+
+              <button 
+                className="carousel-control-btn" 
+                onClick={slideNext}
+                aria-label="Next review"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                </svg>
+              </button>
+            </div>
+
+            <div className="carousel-hint">Hover to pause rotation</div>
+          </div>
+        </div>
+      </section>
+
+      {/* 9. Latest Insights (Blog) Section - Interactive Developer Dashboard */}
+      <section className="w-full bg-gradient-to-b from-[#070913] via-[#0f1124] to-[#1d3f75] py-24 relative overflow-hidden">
+        {/* Techy Grid overlay */}
+        <div className="absolute inset-0 dark-grid-pattern opacity-60 pointer-events-none" />
+        
+        {/* Soft neon background blobs */}
+        <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-blue-500/5 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 rounded-full bg-purple-500/5 blur-3xl pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-16 gap-6">
+            <div className="space-y-4">
+              <h2 className="text-xs font-black tracking-widest text-[#1591DC] uppercase font-mono">system::insights</h2>
+              <h3 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Latest insights from our tech team</h3>
+            </div>
+            <div>
+              <Link 
+                href="/blog" 
+                className="inline-flex items-center text-sm font-bold text-sky-400 hover:text-sky-300 transition-colors group font-mono"
+              >
+                git checkout blog
+                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Mobile-only selector tab bar for quick navigation */}
+          <div className="flex md:hidden justify-around items-center bg-slate-950/60 border border-slate-900 rounded-xl p-2 mb-6 gap-2">
+            {blogSlugs.map((slug) => {
+              const gitMeta = gitInsightsData[slug];
+              const isActive = activeInsightSlug === slug;
+              return (
+                <button
+                  key={slug}
+                  onClick={() => setActiveInsightSlug(slug)}
+                  className={`flex-1 text-center py-2 px-1 rounded-lg text-[10px] font-mono transition-all ${
+                    isActive 
+                      ? "bg-slate-900 text-white border border-slate-800 shadow-md font-bold" 
+                      : "text-slate-500 hover:text-slate-300"
+                  }`}
+                >
+                  <span className="block text-[8px] text-slate-600 uppercase">{gitMeta.branch}</span>
+                  <span className="truncate block max-w-full">{gitMeta.commitHash}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Grid Layout */}
+          <div className="grid lg:grid-cols-12 gap-8 items-stretch">
+            {/* Column 1: Git Branch Tree (lg:col-span-4) */}
+            <div className="lg:col-span-4 flex flex-col justify-center bg-slate-950/20 backdrop-blur-md border border-slate-900 rounded-2xl p-6 shadow-xl relative min-h-[460px]">
+              <div className="absolute top-4 left-4 flex items-center gap-1.5 text-[9px] font-mono text-slate-600">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/60 animate-pulse" />
+                <span>GIT TREE TRACKER</span>
+              </div>
+              
+              <div className="flex justify-between items-center px-4 mt-8 mb-4 text-[10px] font-mono text-slate-500 select-none">
+                <span className="text-purple-400/80 font-bold tracking-wider">sre/infra</span>
+                <span className="text-sky-400/80 font-bold tracking-wider">dev/api</span>
+                <span className="text-teal-400/80 font-bold tracking-wider">sec/compliance</span>
+              </div>
+              
+              <div className="w-full flex justify-center items-center flex-1">
+                <div className="w-full max-w-[320px] aspect-[320/450]">
+                  <svg viewBox="0 0 320 450" className="w-full h-full">
+                    {/* Definitions for filters and gradients */}
+                    <defs>
+                      <filter id="glow-dev" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="5" result="blur" />
+                        <feMerge>
+                          <feMergeNode in="blur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                      <filter id="glow-sre" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="5" result="blur" />
+                        <feMerge>
+                          <feMergeNode in="blur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                      <filter id="glow-security" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="5" result="blur" />
+                        <feMerge>
+                          <feMergeNode in="blur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                    </defs>
+
+                    {/* Base tracks (always visible, semi-transparent slate) */}
+                    <path d="M 160,0 L 160,450" fill="none" stroke="rgba(30, 41, 59, 0.5)" strokeWidth="4" strokeLinecap="round" />
+                    <path d="M 160,60 C 110,60 60,90 60,130 L 60,210 C 60,250 110,280 160,280" fill="none" stroke="rgba(30, 41, 59, 0.5)" strokeWidth="4" strokeLinecap="round" />
+                    <path d="M 160,120 C 210,120 260,150 260,190 L 260,250 C 260,290 210,320 160,320" fill="none" stroke="rgba(30, 41, 59, 0.5)" strokeWidth="4" strokeLinecap="round" />
+
+                    {/* Animated Active/Hovered tracks */}
+                    <path 
+                      d="M 160,0 L 160,450" 
+                      fill="none" 
+                      stroke="#38bdf8" 
+                      strokeWidth="4" 
+                      strokeLinecap="round" 
+                      className={`transition-opacity duration-300 ${(activeInsightSlug === "designing-scalable-apis" || hoveredInsightSlug === "designing-scalable-apis") ? "opacity-100" : "opacity-0"}`}
+                      filter="url(#glow-dev)"
+                    />
+                    
+                    <path 
+                      d="M 160,60 C 110,60 60,90 60,130 L 60,210 C 60,250 110,280 160,280" 
+                      fill="none" 
+                      stroke="#c084fc" 
+                      strokeWidth="4" 
+                      strokeLinecap="round" 
+                      className={`transition-opacity duration-300 ${(activeInsightSlug === "cloud-cost-guardrails" || hoveredInsightSlug === "cloud-cost-guardrails") ? "opacity-100" : "opacity-0"}`}
+                      filter="url(#glow-sre)"
+                    />
+
+                    <path 
+                      d="M 160,120 C 210,120 260,150 260,190 L 260,250 C 260,290 210,320 160,320" 
+                      fill="none" 
+                      stroke="#2dd4bf" 
+                      strokeWidth="4" 
+                      strokeLinecap="round" 
+                      className={`transition-opacity duration-300 ${(activeInsightSlug === "cicd-regulated-environments" || hoveredInsightSlug === "cicd-regulated-environments") ? "opacity-100" : "opacity-0"}`}
+                      filter="url(#glow-security)"
+                    />
+
+                    {/* Running light particles */}
+                    <path 
+                      d="M 160,0 L 160,450" 
+                      fill="none" 
+                      stroke="#e0f2fe" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeDasharray="10 30"
+                      className={`git-running-light transition-opacity duration-300 ${(activeInsightSlug === "designing-scalable-apis" || hoveredInsightSlug === "designing-scalable-apis") ? "opacity-100" : "opacity-0"}`}
+                    />
+                    <path 
+                      d="M 160,60 C 110,60 60,90 60,130 L 60,210 C 60,250 110,280 160,280" 
+                      fill="none" 
+                      stroke="#f3e8ff" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeDasharray="10 30"
+                      className={`git-running-light transition-opacity duration-300 ${(activeInsightSlug === "cloud-cost-guardrails" || hoveredInsightSlug === "cloud-cost-guardrails") ? "opacity-100" : "opacity-0"}`}
+                    />
+                    <path 
+                      d="M 160,120 C 210,120 260,150 260,190 L 260,250 C 260,290 210,320 160,320" 
+                      fill="none" 
+                      stroke="#f0fdfa" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeDasharray="10 30"
+                      className={`git-running-light transition-opacity duration-300 ${(activeInsightSlug === "cicd-regulated-environments" || hoveredInsightSlug === "cicd-regulated-environments") ? "opacity-100" : "opacity-0"}`}
+                    />
+
+                    {/* Commit nodes */}
+                    {/* 1. Initial Scaffold Commit Node */}
+                    <g className="group/node">
+                      <circle cx="160" cy="30" r="5" className="fill-slate-900 stroke-slate-700 stroke-2 transition-colors duration-300 group-hover/node:stroke-slate-500" />
+                      <text x="176" y="34" className="text-[9px] font-mono fill-slate-600 transition-colors duration-300 group-hover/node:fill-slate-400 select-none">init project</text>
+                    </g>
+
+                    {/* 2. SRE Commit Node */}
+                    <g 
+                      className="cursor-pointer group/node"
+                      onClick={() => setActiveInsightSlug("cloud-cost-guardrails")}
+                      onMouseEnter={() => setHoveredInsightSlug("cloud-cost-guardrails")}
+                      onMouseLeave={() => setHoveredInsightSlug(null)}
+                    >
+                      <circle 
+                        cx="60" 
+                        cy="170" 
+                        r="10" 
+                        className={`fill-none stroke-2 transition-all duration-300 ${
+                          activeInsightSlug === "cloud-cost-guardrails" ? "animate-pulse-sre" : "stroke-slate-800 group-hover/node:stroke-purple-500/50"
+                        }`}
+                      />
+                      <circle 
+                        cx="60" 
+                        cy="170" 
+                        r="5" 
+                        className={`transition-all duration-300 ${
+                          activeInsightSlug === "cloud-cost-guardrails" ? "fill-purple-400 stroke-purple-200 stroke-2" : "fill-slate-950 stroke-slate-600 group-hover/node:fill-purple-500/80 group-hover/node:stroke-purple-300"
+                        }`}
+                      />
+                      <text 
+                        x="76" 
+                        y="173" 
+                        className={`text-[10px] font-mono transition-colors duration-300 select-none ${
+                          activeInsightSlug === "cloud-cost-guardrails" ? "fill-purple-400 font-bold" : "fill-slate-600 group-hover/node:fill-slate-300"
+                        }`}
+                      >
+                        f6b8c4d
+                      </text>
+                    </g>
+
+                    {/* 3. Security Commit Node */}
+                    <g 
+                      className="cursor-pointer group/node"
+                      onClick={() => setActiveInsightSlug("cicd-regulated-environments")}
+                      onMouseEnter={() => setHoveredInsightSlug("cicd-regulated-environments")}
+                      onMouseLeave={() => setHoveredInsightSlug(null)}
+                    >
+                      <circle 
+                        cx="260" 
+                        cy="220" 
+                        r="10" 
+                        className={`fill-none stroke-2 transition-all duration-300 ${
+                          activeInsightSlug === "cicd-regulated-environments" ? "animate-pulse-sec" : "stroke-slate-800 group-hover/node:stroke-teal-500/50"
+                        }`}
+                      />
+                      <circle 
+                        cx="260" 
+                        cy="220" 
+                        r="5" 
+                        className={`transition-all duration-300 ${
+                          activeInsightSlug === "cicd-regulated-environments" ? "fill-teal-400 stroke-teal-200 stroke-2" : "fill-slate-950 stroke-slate-600 group-hover/node:fill-teal-500/80 group-hover/node:stroke-teal-300"
+                        }`}
+                      />
+                      <text 
+                        x="244" 
+                        y="223" 
+                        textAnchor="end"
+                        className={`text-[10px] font-mono transition-colors duration-300 select-none ${
+                          activeInsightSlug === "cicd-regulated-environments" ? "fill-teal-400 font-bold" : "fill-slate-600 group-hover/node:fill-slate-300"
+                        }`}
+                      >
+                        e3d9f2a
+                      </text>
+                    </g>
+
+                    {/* 4. Dev Commit Node */}
+                    <g 
+                      className="cursor-pointer group/node"
+                      onClick={() => setActiveInsightSlug("designing-scalable-apis")}
+                      onMouseEnter={() => setHoveredInsightSlug("designing-scalable-apis")}
+                      onMouseLeave={() => setHoveredInsightSlug(null)}
+                    >
+                      <circle 
+                        cx="160" 
+                        cy="360" 
+                        r="10" 
+                        className={`fill-none stroke-2 transition-all duration-300 ${
+                          activeInsightSlug === "designing-scalable-apis" ? "animate-pulse-dev" : "stroke-slate-800 group-hover/node:stroke-sky-500/50"
+                        }`}
+                      />
+                      <circle 
+                        cx="160" 
+                        cy="360" 
+                        r="5" 
+                        className={`transition-all duration-300 ${
+                          activeInsightSlug === "designing-scalable-apis" ? "fill-sky-400 stroke-sky-200 stroke-2" : "fill-slate-950 stroke-slate-600 group-hover/node:fill-sky-500/80 group-hover/node:stroke-sky-300"
+                        }`}
+                      />
+                      <text 
+                        x="176" 
+                        y="363" 
+                        className={`text-[10px] font-mono transition-colors duration-300 select-none ${
+                          activeInsightSlug === "designing-scalable-apis" ? "fill-sky-400 font-bold" : "fill-slate-600 group-hover/node:fill-slate-300"
+                        }`}
+                      >
+                        b2a5f7c
+                      </text>
+                    </g>
+
+                    {/* 5. Final Merge Commit Node */}
+                    <g className="group/node">
+                      <circle cx="160" cy="420" r="5" className="fill-slate-900 stroke-slate-700 stroke-2 transition-colors duration-300 group-hover/node:stroke-slate-500" />
+                      <text x="176" y="424" className="text-[9px] font-mono fill-slate-600 transition-colors duration-300 group-hover/node:fill-slate-400 select-none">merge main</text>
+                    </g>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Column 2: Selected Post Details (lg:col-span-4) */}
+            <div className="lg:col-span-4 flex flex-col justify-stretch">
+              {(() => {
+                const activePost = blogData[activeInsightSlug] || blogData["cloud-cost-guardrails"];
+                const activeGitMeta = gitInsightsData[activeInsightSlug] || gitInsightsData["cloud-cost-guardrails"];
+                return (
+                  <motion.div
+                    key={activeInsightSlug}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35 }}
+                    className="flex-1 flex flex-col justify-between p-6 bg-[#0c0d16]/80 border border-slate-900 rounded-2xl shadow-2xl relative overflow-hidden group"
+                  >
+                    <div className="absolute top-0 left-0 w-full h-[3px]" style={{ backgroundColor: activeGitMeta.branchColor }} />
+                    <div className="space-y-4">
+                      {/* Blog Cover Image */}
+                      {activePost.image && (
+                        <div className="relative w-full h-44 rounded-xl overflow-hidden mb-4 border border-slate-900 bg-slate-950 select-none">
+                          <Image 
+                            src={activePost.image} 
+                            alt={activePost.title}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                            className="object-cover group-hover:scale-102 transition-transform duration-500 opacity-60"
+                          />
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                        <span 
+                          className="font-bold px-2 py-0.5 rounded border uppercase tracking-wider text-[9px]"
+                          style={{
+                            color: activeGitMeta.branchColor,
+                            borderColor: `${activeGitMeta.branchColor}30`,
+                            backgroundColor: `${activeGitMeta.branchColor}10`
+                          }}
+                        >
+                          {activePost.category}
+                        </span>
+                        <span>{activePost.readTime}</span>
+                      </div>
+                      
+                      <h4 className="text-lg font-bold text-white leading-snug group-hover:text-sky-400 transition-colors">
+                        {activePost.title}
+                      </h4>
+                      
+                      <p className="text-[10px] text-slate-500 font-mono">
+                        Commit: <span className="text-slate-400 font-bold">{activeGitMeta.commitHash}</span> by {activePost.author}
+                      </p>
+                      
+                      <p className="text-xs text-slate-400 leading-relaxed font-sans">
+                        {activePost.summary}
+                      </p>
+                    </div>
+                    
+                    <div className="pt-6 mt-6 border-t border-slate-900 flex justify-between items-center">
+                      <Link 
+                        href={`/blog/${activeInsightSlug}`}
+                        className="inline-flex items-center text-xs font-bold text-sky-400 hover:text-sky-300 transition-colors group/link font-mono"
+                      >
+                        cat full_post.md
+                        <ArrowRight className="w-3.5 h-3.5 ml-1.5 group-hover/link:translate-x-1 transition-transform" />
+                      </Link>
+                      <span className="text-[9px] font-mono text-slate-600">Updated: {activePost.date}</span>
+                    </div>
+                  </motion.div>
+                );
+              })()}
+            </div>
+
+            {/* Column 3: IDE Diff Previewer (lg:col-span-4) */}
+            <div className="lg:col-span-4 flex flex-col justify-stretch">
+              {(() => {
+                const activeGitMeta = gitInsightsData[activeInsightSlug] || gitInsightsData["cloud-cost-guardrails"];
+                return (
+                  <motion.div
+                    key={activeInsightSlug + "-ide"}
+                    initial={{ opacity: 0, x: 15 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.35, delay: 0.05 }}
+                    className="flex-1 flex flex-col min-h-[420px]"
+                  >
+                    <div className="flex-1 flex flex-col h-full bg-[#090d16] border border-slate-900 rounded-2xl overflow-hidden shadow-2xl font-mono text-xs relative">
+                      {/* IDE Titlebar */}
+                      <div className="ide-titlebar flex items-center justify-between px-4 py-3 bg-[#0c1220] border-b border-slate-950 select-none">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+                        </div>
+                        <div className="text-[10px] text-slate-500 font-bold tracking-wider flex items-center gap-1.5 font-mono font-bold">
+                          <Terminal className="w-3.5 h-3.5 text-[#1591DC]" />
+                          <span>git diff {activeGitMeta.commitHash}</span>
+                        </div>
+                        <div className="w-8" />
+                      </div>
+
+                      {/* IDE Tabs */}
+                      <div className="ide-tabs flex bg-[#080b13] border-b border-slate-950 text-slate-500 select-none">
+                        <div className="ide-tab active flex items-center gap-2 px-4 py-2 bg-[#090d16] border-r border-slate-950 border-t border-t-sky-500 text-slate-200">
+                          <Code className="w-3.5 h-3.5 text-sky-400" />
+                          <span className="text-[10px] font-bold font-mono">{activeGitMeta.fileName}</span>
+                        </div>
+                        <div className="flex-1 bg-[#080b13]" />
+                      </div>
+
+                      {/* IDE Editor Area */}
+                      <div className="ide-editor flex-1 p-4 overflow-y-auto max-h-[360px] bg-[#06080e] text-slate-300 font-mono text-[10px] sm:text-[11px] leading-relaxed">
+                        <div className="grid grid-cols-[auto_1fr] gap-3">
+                          {/* Line Numbers */}
+                          <div className="text-slate-700 text-right select-none pr-3 border-r border-slate-900 flex flex-col">
+                            {activeGitMeta.diff.map((_, i) => (
+                              <span key={i} className="leading-6 h-6">{i + 1}</span>
+                            ))}
+                          </div>
+                          {/* Code Diff lines */}
+                          <div className="flex flex-col overflow-x-auto whitespace-pre font-mono">
+                            {activeGitMeta.diff.map((line, i) => {
+                              let lineClass = "text-slate-400";
+                              if (line.type === "addition") {
+                                lineClass = "text-emerald-400 bg-emerald-500/5 -mx-4 px-4 block border-l border-emerald-500/70 font-semibold";
+                              } else if (line.type === "deletion") {
+                                lineClass = "text-rose-400 bg-rose-500/5 -mx-4 px-4 block border-l border-rose-500/70 font-semibold";
+                              }
+                              return (
+                                <span key={i} className={`leading-6 h-6 font-mono ${lineClass}`}>
+                                  {line.text}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* IDE Footer */}
+                      <div className="ide-footer flex items-center justify-between px-4 py-2 bg-[#0c1220] border-t border-slate-950 text-[9px] text-slate-500 font-mono">
+                        <div className="flex items-center gap-3">
+                          <span>Branch: <span className="text-sky-400">{activeGitMeta.branchName}</span></span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
+                          <span>LF</span>
+                          <span>UTF-8</span>
+                          <span>Javascript</span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      </section>
+
     </div>
   );
 }
