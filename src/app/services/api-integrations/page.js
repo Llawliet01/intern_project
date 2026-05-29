@@ -11,10 +11,18 @@ import {
 
 export default function ApiIntegrationsPage() {
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
+  const [faqPage, setFaqPage] = useState(0);
+  const [faqInput, setFaqInput] = useState("");
+  const [faqSent, setFaqSent] = useState(false);
 
   const toggleFaq = (index) => {
     setOpenFaqIndex(openFaqIndex === index ? null : index);
   };
+
+  const [activeGatewayPillar, setActiveGatewayPillar] = useState(0);
+  const [activeUseCase, setActiveUseCase] = useState(0);
+  const [activePattern, setActivePattern] = useState(0);
+  const [activeStoryTab, setActiveStoryTab] = useState("challenge");
 
   const apiDesignFeatures = [
     "RESTful & GraphQL APIs",
@@ -267,7 +275,13 @@ export default function ApiIntegrationsPage() {
 
           <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {/* Card 1: API Design */}
-            <div className="p-8 rounded-3xl bg-slate-900/60 border border-white/5 hover:border-blue-500/30 transition-all flex flex-col justify-between">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="p-8 rounded-3xl bg-slate-900/60 border border-white/5 hover:border-blue-500/30 transition-all flex flex-col justify-between hover:shadow-2xl hover:shadow-blue-500/5 group"
+            >
               <div className="space-y-4">
                 <span className="text-[9px] font-black tracking-widest text-[#1591dc] uppercase font-mono bg-blue-950/40 px-2.5 py-1 rounded border border-blue-500/25">Design Strategy</span>
                 <h4 className="text-xl font-bold text-white mt-4">API Design</h4>
@@ -276,17 +290,27 @@ export default function ApiIntegrationsPage() {
                 </p>
                 <ul className="space-y-2 pt-4 border-t border-white/5">
                   {apiDesignFeatures.map((feat) => (
-                    <li key={feat} className="flex items-center text-xs text-slate-300">
+                    <motion.li 
+                      key={feat} 
+                      whileHover={{ scale: 1.02, x: 4 }}
+                      className="flex items-center text-xs text-slate-300 hover:text-blue-400 cursor-default transition-colors"
+                    >
                       <Check className="w-4 h-4 mr-2 text-blue-400 flex-shrink-0" />
                       <span>{feat}</span>
-                    </li>
+                    </motion.li>
                   ))}
                 </ul>
               </div>
-            </div>
+            </motion.div>
 
             {/* Card 2: Integrations */}
-            <div className="p-8 rounded-3xl bg-slate-900/60 border border-white/5 hover:border-cyan-500/30 transition-all flex flex-col justify-between">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="p-8 rounded-3xl bg-slate-900/60 border border-white/5 hover:border-cyan-500/30 transition-all flex flex-col justify-between hover:shadow-2xl hover:shadow-cyan-500/5 group"
+            >
               <div className="space-y-4">
                 <span className="text-[9px] font-black tracking-widest text-[#4bb8fa] uppercase font-mono bg-cyan-950/40 px-2.5 py-1 rounded border border-cyan-500/25">Ecosystem Sync</span>
                 <h4 className="text-xl font-bold text-white mt-4">Seamless Integrations</h4>
@@ -295,19 +319,23 @@ export default function ApiIntegrationsPage() {
                 </p>
                 <ul className="space-y-2 pt-4 border-t border-white/5">
                   {integrationFeatures.map((feat) => (
-                    <li key={feat} className="flex items-center text-xs text-slate-300">
+                    <motion.li 
+                      key={feat} 
+                      whileHover={{ scale: 1.02, x: 4 }}
+                      className="flex items-center text-xs text-slate-300 hover:text-cyan-400 cursor-default transition-colors"
+                    >
                       <Check className="w-4 h-4 mr-2 text-cyan-400 flex-shrink-0" />
                       <span>{feat}</span>
-                    </li>
+                    </motion.li>
                   ))}
                 </ul>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* 3. API GATEWAY & MANAGEMENT */}
+      {/* 3. API GATEWAY & MANAGEMENT (REDESIGNED: INTERACTIVE MONITOR) */}
       <section className="relative bg-gradient-to-b from-[#1c2c5c] via-[#263c75] to-[#334e8f] py-20 border-b border-white/5 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
@@ -318,51 +346,247 @@ export default function ApiIntegrationsPage() {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {gatewayPillars.map((pil) => {
-              const Icon = pil.icon;
-              return (
-                <div 
-                  key={pil.title}
-                  className="p-6 rounded-2xl bg-slate-950/40 border border-white/5 hover:border-[#1591dc]/30 transition-all flex flex-col justify-between"
-                >
-                  <div className="space-y-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-center text-[#1591dc]">
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <h4 className="text-sm font-bold text-white">{pil.title}</h4>
-                    <p className="text-xs text-slate-400 leading-relaxed">{pil.desc}</p>
-                  </div>
-                  <div className="border-t border-white/5 pt-3 mt-4 text-[9px] text-cyan-400 font-mono">
-                    {pil.badge}
-                  </div>
+          <div className="grid lg:grid-cols-12 gap-8 items-stretch max-w-6xl mx-auto">
+            {/* Left Column: Live Gateway Monitor Screen */}
+            <div className="lg:col-span-5 flex flex-col justify-between bg-slate-950/70 border border-white/5 p-6 rounded-3xl relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-tr from-[#1591dc]/10 to-transparent pointer-events-none" />
+              
+              <div className="space-y-4 relative z-10 w-full flex flex-col justify-between h-full">
+                <div className="flex justify-between items-center pb-3 border-b border-white/5">
+                  <span className="text-[10px] font-bold text-slate-400 font-mono flex items-center gap-1.5">
+                    <Terminal className="w-3.5 h-3.5 text-[#1591dc]" />
+                    gateway-monitor -- live
+                  </span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                 </div>
-              );
-            })}
+
+                {/* Animated Waveform monitor */}
+                <div className="py-6 flex items-end justify-center gap-1 h-24">
+                  {[...Array(18)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="w-2 bg-gradient-to-t from-[#2C5EAD] to-[#1591dc] rounded-full"
+                      animate={{ 
+                        height: [20, Math.random() * 65 + 15, 20] 
+                      }}
+                      transition={{
+                        repeat: Infinity,
+                        duration: 1.2 + Math.random() * 0.8,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Dynamic Monitor metrics */}
+                <div className="p-4 rounded-2xl bg-slate-900/80 border border-white/5 space-y-2 font-mono text-[10px] text-slate-300">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">ACTIVE RULESET:</span>
+                    <span className="text-[#1591dc] font-bold uppercase">{gatewayPillars[activeGatewayPillar].title}</span>
+                  </div>
+                  <div className="border-t border-white/5 my-2" />
+                  
+                  {activeGatewayPillar === 0 && (
+                    <>
+                      <div className="flex justify-between"><span>SSL/TLS LINK:</span><span className="text-emerald-400">ENCRYPTED (TLS 1.3)</span></div>
+                      <div className="flex justify-between"><span>DDoS PROTECTION:</span><span className="text-[#4bb8fa]">100% SECURED</span></div>
+                      <div className="flex justify-between"><span>BLOCKED THREATS:</span><span className="text-rose-400 animate-pulse">247 requests/hr</span></div>
+                    </>
+                  )}
+                  {activeGatewayPillar === 1 && (
+                    <>
+                      <div className="flex justify-between"><span>REQUEST LOAD:</span><span className="text-amber-400">14.2K requests/sec</span></div>
+                      <div className="flex justify-between"><span>AVG ENDPOINT LATENCY:</span><span className="text-emerald-400">12ms (p95: 22ms)</span></div>
+                      <div className="flex justify-between"><span>TELEMETRY PIPELINES:</span><span className="text-[#4bb8fa]">8 Active streams</span></div>
+                    </>
+                  )}
+                  {activeGatewayPillar === 2 && (
+                    <>
+                      <div className="flex justify-between"><span>CACHE HIT RATIO:</span><span className="text-emerald-400">92.4%</span></div>
+                      <div className="flex justify-between"><span>EDGE ENDPOINT SPEEDS:</span><span className="text-[#4bb8fa]">Avg 8ms response</span></div>
+                      <div className="flex justify-between"><span>BACKEND WORK SAVED:</span><span className="text-emerald-400">44.8% CPU savings</span></div>
+                    </>
+                  )}
+                  {activeGatewayPillar === 3 && (
+                    <>
+                      <div className="flex justify-between"><span>CIRCUIT STATE:</span><span className="text-emerald-400 font-bold">CLOSED (Healthy)</span></div>
+                      <div className="flex justify-between"><span>EXPONENTIAL RETRIES:</span><span className="text-[#4bb8fa]">Active (3 Max)</span></div>
+                      <div className="flex justify-between"><span>FALLBACK RESPONSE:</span><span className="text-slate-400">Inactive (0 triggers)</span></div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Grid selection cards */}
+            <div className="lg:col-span-7 grid sm:grid-cols-2 gap-4">
+              {gatewayPillars.map((pil, idx) => {
+                const Icon = pil.icon;
+                const isActive = activeGatewayPillar === idx;
+                return (
+                  <button 
+                    key={pil.title}
+                    onClick={() => setActiveGatewayPillar(idx)}
+                    className={`text-left p-6 rounded-2xl border transition-all duration-300 flex flex-col justify-between h-full relative overflow-hidden ${
+                      isActive 
+                        ? "bg-[#1b203a] border-[#1591dc] shadow-lg shadow-[#1591dc]/10 text-white" 
+                        : "bg-slate-900/40 border-white/5 text-slate-400 hover:border-white/10 hover:text-white"
+                    }`}
+                  >
+                    <div className="space-y-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-colors ${
+                        isActive ? "bg-[#1591dc]/20 border-[#1591dc] text-[#4bb8fa]" : "bg-slate-900 border-white/5 text-slate-500"
+                      }`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <h4 className={`text-sm font-bold ${isActive ? "text-white" : "text-slate-200"}`}>{pil.title}</h4>
+                      <p className="text-xs text-slate-400 leading-relaxed">{pil.desc}</p>
+                    </div>
+                    <div className={`border-t border-white/5 pt-3 mt-4 text-[9px] font-mono uppercase tracking-wider ${
+                      isActive ? "text-[#4bb8fa]" : "text-slate-500"
+                    }`}>
+                      {pil.badge}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* 4. COMMON USE CASES */}
-      <section className="relative bg-gradient-to-b from-[#334e8f] via-[#5978be] to-[#8da8df] py-20 border-b border-white/5 overflow-hidden">
+      {/* 4. COMMON USE CASES (REDESIGNED: INTERACTIVE ROUTER) */}
+      <section className="relative bg-gradient-to-b from-[#334e8f] via-[#5978be] to-[#cddbf7] py-20 border-b border-white/5 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-white">
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-            <h2 className="text-[10px] font-black tracking-widest text-[#4BB8FA] uppercase font-mono">common::usecases</h2>
+            <h2 className="text-[10px] font-black tracking-widest text-slate-300 uppercase font-mono">common::usecases</h2>
             <h3 className="text-3xl font-extrabold tracking-tight text-white">Integration Use Cases</h3>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {useCases.map((uc) => (
-              <div 
-                key={uc.title}
-                className="p-6 rounded-3xl bg-[#090b16]/95 border border-white/5 flex flex-col justify-between h-full"
-              >
-                <div className="space-y-4">
-                  <h4 className="text-sm font-bold text-white">{uc.title}</h4>
-                  <p className="text-xs text-slate-400 leading-relaxed">{uc.desc}</p>
-                </div>
+          <div className="grid lg:grid-cols-12 gap-8 items-stretch max-w-6xl mx-auto">
+            {/* Left Column: Vertical button selector and active usecase info */}
+            <div className="lg:col-span-5 flex flex-col justify-between space-y-4">
+              <div className="flex flex-col space-y-2">
+                {useCases.map((uc, idx) => {
+                  const isActive = activeUseCase === idx;
+                  return (
+                    <button
+                      key={uc.title}
+                      onClick={() => setActiveUseCase(idx)}
+                      className={`text-left p-4.5 rounded-xl border transition-all duration-300 font-extrabold text-sm ${
+                        isActive
+                          ? "bg-slate-950/80 border-[#4BB8FA] text-white shadow-md shadow-[#4BB8FA]/10"
+                          : "bg-slate-900/30 border-white/5 text-slate-300 hover:border-white/10 hover:text-white"
+                      }`}
+                    >
+                      {uc.title}
+                    </button>
+                  );
+                })}
               </div>
-            ))}
+
+              {/* Description box */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeUseCase}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  className="p-6 rounded-2xl bg-slate-950/70 border border-white/5 flex-grow flex flex-col justify-center"
+                >
+                  <span className="text-[9px] font-mono text-[#4BB8FA] font-bold uppercase tracking-widest mb-1.5 block">ACTIVE ROUTE</span>
+                  <h4 className="text-base font-bold text-white mb-2">{useCases[activeUseCase].title}</h4>
+                  <p className="text-xs text-slate-300 leading-relaxed">{useCases[activeUseCase].desc}</p>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Right Column: SVG Router Visualizer Board */}
+            <div className="lg:col-span-7 p-6 rounded-3xl bg-[#090b16]/95 border border-white/5 flex flex-col items-center justify-center relative overflow-hidden h-[300px] lg:h-auto">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(21,145,220,0.02),transparent_70%)] pointer-events-none" />
+              
+              <div className="w-full h-full max-w-[480px] max-h-[220px]">
+                <svg viewBox="0 0 500 240" className="w-full h-full select-none" fill="none">
+                  {/* Connection paths */}
+                  {/* Client App (left) to Gateway (center) */}
+                  <path d="M 70 120 L 250 120" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="3" />
+                  <path d="M 70 120 L 250 120" stroke="#1591dc" strokeWidth="3" className="opacity-40" />
+
+                  {/* Gateway (center) to destinations (right) */}
+                  <path d="M 250 120 C 330 120, 350 50, 430 50" stroke={activeUseCase === 0 ? "#1591dc" : "rgba(255, 255, 255, 0.08)"} strokeWidth="2.5" />
+                  <path d="M 250 120 C 330 120, 350 100, 430 100" stroke={activeUseCase === 1 ? "#1591dc" : "rgba(255, 255, 255, 0.08)"} strokeWidth="2.5" />
+                  <path d="M 250 120 C 330 120, 350 160, 430 160" stroke={activeUseCase === 2 ? "#1591dc" : "rgba(255, 255, 255, 0.08)"} strokeWidth="2.5" />
+                  <path d="M 250 120 C 330 120, 350 210, 430 210" stroke={activeUseCase === 3 ? "#1591dc" : "rgba(255, 255, 255, 0.08)"} strokeWidth="2.5" />
+
+                  {/* Client App Node (Left) */}
+                  <g transform="translate(60, 120)">
+                    <circle r="22" fill="#11142a" stroke="#2c5ead" strokeWidth="1.5" />
+                    <Terminal className="w-5 h-5 text-[#2c5ead] -translate-x-2.5 -translate-y-2.5" />
+                    <text x="0" y="34" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold" fontFamily="monospace">CLIENT APP</text>
+                  </g>
+
+                  {/* Gateway Core Hub (Center) */}
+                  <g transform="translate(250, 120)">
+                    <motion.circle r="30" fill="rgba(21, 145, 220, 0.06)" stroke="#1591dc" strokeWidth="1.5" animate={{ scale: [1, 1.12, 1] }} transition={{ repeat: Infinity, duration: 3 }} />
+                    <circle r="20" fill="#0d0f22" stroke="#1591dc" strokeWidth="2" />
+                    <Layers className="w-5 h-5 text-[#1591dc] -translate-x-2.5 -translate-y-2.5" />
+                    <text x="0" y="42" textAnchor="middle" fill="#1591dc" fontSize="8" fontWeight="bold" fontFamily="monospace">API ROUTER</text>
+                  </g>
+
+                  {/* Payments Destination Node */}
+                  <g transform="translate(440, 50)">
+                    <circle r="16" fill={activeUseCase === 0 ? "#11142a" : "#0d0f22"} stroke={activeUseCase === 0 ? "#4bb8fa" : "rgba(255,255,255,0.08)"} strokeWidth="1.5" />
+                    <Zap className={`w-4 h-4 ${activeUseCase === 0 ? "text-[#4bb8fa]" : "text-slate-600"} -translate-x-2 -translate-y-2`} />
+                    <text x="24" y="3" textAnchor="start" fill={activeUseCase === 0 ? "#ffffff" : "#64748b"} fontSize="8" fontWeight="bold" fontFamily="monospace">PAYMENTS</text>
+                  </g>
+
+                  {/* CRM Destination Node */}
+                  <g transform="translate(440, 100)">
+                    <circle r="16" fill={activeUseCase === 1 ? "#11142a" : "#0d0f22"} stroke={activeUseCase === 1 ? "#4bb8fa" : "rgba(255,255,255,0.08)"} strokeWidth="1.5" />
+                    <Plug className={`w-4 h-4 ${activeUseCase === 1 ? "text-[#4bb8fa]" : "text-slate-600"} -translate-x-2 -translate-y-2`} />
+                    <text x="24" y="3" textAnchor="start" fill={activeUseCase === 1 ? "#ffffff" : "#64748b"} fontSize="8" fontWeight="bold" fontFamily="monospace">CRM SYNC</text>
+                  </g>
+
+                  {/* ERP Destination Node */}
+                  <g transform="translate(440, 160)">
+                    <circle r="16" fill={activeUseCase === 2 ? "#11142a" : "#0d0f22"} stroke={activeUseCase === 2 ? "#4bb8fa" : "rgba(255,255,255,0.08)"} strokeWidth="1.5" />
+                    <Database className={`w-4 h-4 ${activeUseCase === 2 ? "text-[#4bb8fa]" : "text-slate-600"} -translate-x-2 -translate-y-2`} />
+                    <text x="24" y="3" textAnchor="start" fill={activeUseCase === 2 ? "#ffffff" : "#64748b"} fontSize="8" fontWeight="bold" fontFamily="monospace">ERP LEDGER</text>
+                  </g>
+
+                  {/* Cloud Destination Node */}
+                  <g transform="translate(440, 210)">
+                    <circle r="16" fill={activeUseCase === 3 ? "#11142a" : "#0d0f22"} stroke={activeUseCase === 3 ? "#4bb8fa" : "rgba(255,255,255,0.08)"} strokeWidth="1.5" />
+                    <Globe className={`w-4 h-4 ${activeUseCase === 3 ? "text-[#4bb8fa]" : "text-slate-600"} -translate-x-2 -translate-y-2`} />
+                    <text x="24" y="3" textAnchor="start" fill={activeUseCase === 3 ? "#ffffff" : "#64748b"} fontSize="8" fontWeight="bold" fontFamily="monospace">CLOUD ECO</text>
+                  </g>
+
+                  {/* Glowing dynamic packet flying across path */}
+                  <motion.circle
+                    cx="0"
+                    cy="0"
+                    r="4"
+                    fill="#4bb8fa"
+                    className="shadow-sm shadow-[#4bb8fa]/50"
+                    animate={{
+                      x: [70, 250, 440],
+                      y: activeUseCase === 0
+                        ? [120, 120, 50]
+                        : activeUseCase === 1
+                        ? [120, 120, 100]
+                        : activeUseCase === 2
+                        ? [120, 120, 160]
+                        : [120, 120, 210]
+                    }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 2.2,
+                      ease: "easeInOut"
+                    }}
+                  />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -373,132 +597,402 @@ export default function ApiIntegrationsPage() {
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
             <h2 className="text-[10px] font-black tracking-widest text-[#2C5EAD] uppercase font-mono">architectural::patterns</h2>
             <h3 className="text-3xl font-extrabold tracking-tight text-slate-900">Integration Patterns We Use</h3>
+            <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
+              Click a design pattern below to view its functional data flow topology schema.
+            </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {patterns.map((pat) => (
-              <div 
-                key={pat.title}
-                className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between"
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            {patterns.map((pat, idx) => {
+              const isActive = activePattern === idx;
+              return (
+                <div 
+                  key={pat.title}
+                  onClick={() => setActivePattern(idx)}
+                  className={`p-6 rounded-2xl border transition-all duration-300 flex flex-col justify-between cursor-pointer select-none ${
+                    isActive 
+                      ? "bg-white border-[#2C5EAD] shadow-md shadow-[#2C5EAD]/10 scale-102"
+                      : "bg-white/70 border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
+                  }`}
+                >
+                  <div className="space-y-2">
+                    <h4 className="text-base font-extrabold text-slate-900">{pat.title}</h4>
+                    <div className="text-[8px] font-bold text-slate-400 uppercase tracking-widest font-mono">Use Case</div>
+                    <p className="text-xs text-slate-600 leading-normal">{pat.useCase}</p>
+                  </div>
+                  <div className="border-t border-slate-100 pt-3 mt-4">
+                    <div className="text-[8px] font-bold text-slate-400 uppercase tracking-widest font-mono">Example</div>
+                    <span className="text-xs text-slate-800 font-bold">{pat.example}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Pattern Schematic Drawer Monitor */}
+          <div className="rounded-3xl bg-[#060b14] border border-white/5 p-8 text-white max-w-5xl mx-auto shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 font-mono text-[9px] text-[#4BB8FA] font-bold uppercase tracking-wider">
+              topology_schema::active
+            </div>
+            
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activePattern}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+                className="w-full flex flex-col items-center space-y-6"
               >
-                <div className="space-y-2">
-                  <h4 className="text-base font-bold text-slate-900">{pat.title}</h4>
-                  <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest font-mono">Use Case</div>
-                  <p className="text-xs text-slate-600">{pat.useCase}</p>
+                <h4 className="text-base font-bold text-white font-mono flex items-center gap-2">
+                  <Code className="w-4 h-4 text-[#4BB8FA]" />
+                  {patterns[activePattern].title} Topology
+                </h4>
+
+                {/* Workflow schematics */}
+                <div className="w-full py-8 flex flex-col items-center justify-center font-mono text-[10px] text-slate-300 overflow-x-auto min-h-[90px] border border-white/5 rounded-2xl bg-slate-950/60 max-w-4xl">
+                  {activePattern === 0 && (
+                    <div className="flex items-center space-x-6 min-w-max px-6">
+                      <div className="px-4 py-2.5 rounded-lg bg-blue-950/40 border border-blue-500/30 text-blue-400 font-bold">Client UI</div>
+                      <span>───(HTTP GET)───►</span>
+                      <div className="px-4 py-2.5 rounded-lg bg-indigo-950/40 border border-indigo-500/30 text-indigo-400 font-bold">API Gateway</div>
+                      <span>───(Database Query)───►</span>
+                      <div className="px-4 py-2.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 font-bold">RDS Database</div>
+                    </div>
+                  )}
+
+                  {activePattern === 1 && (
+                    <div className="flex items-center space-x-6 min-w-max px-6">
+                      <div className="px-4 py-2.5 rounded-lg bg-blue-950/40 border border-blue-500/30 text-blue-400 font-bold">Client Action</div>
+                      <span>───(Push Event)───►</span>
+                      <div className="px-4 py-2.5 rounded-lg bg-amber-950/40 border border-amber-500/30 text-amber-400 font-bold">RabbitMQ Queue</div>
+                      <span>───(Consume Job)───►</span>
+                      <div className="px-4 py-2.5 rounded-lg bg-[#27163c] border-purple-500/30 text-purple-400 font-bold">Worker Engine</div>
+                    </div>
+                  )}
+
+                  {activePattern === 2 && (
+                    <div className="flex items-center space-x-6 min-w-max px-6">
+                      <div className="px-4 py-2.5 rounded-lg bg-[#381c1c] border-red-500/30 text-red-400 font-bold">Stripe Webhook</div>
+                      <span>───(HTTPS POST)───►</span>
+                      <div className="px-4 py-2.5 rounded-lg bg-cyan-950/40 border border-cyan-500/30 text-cyan-400 font-bold">Webhook endpoint</div>
+                      <span>───(Verify & Log)───►</span>
+                      <div className="px-4 py-2.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 font-bold">User Database</div>
+                    </div>
+                  )}
+
+                  {activePattern === 3 && (
+                    <div className="flex flex-col items-center space-y-4 px-6">
+                      <div className="flex items-center space-x-6">
+                        <div className="px-4 py-2.5 rounded-lg bg-blue-950/40 border border-blue-500/30 text-blue-400 font-bold">Client Post</div>
+                        <span>───(GraphQL Query)───►</span>
+                        <div className="px-4 py-2.5 rounded-lg bg-[#221028] border-fuchsia-500/30 text-fuchsia-400 font-bold">Apollo Federated Gate</div>
+                      </div>
+                      <div className="flex justify-center space-x-3 text-[9px] pt-1">
+                        <div className="px-3 py-1.5 rounded bg-slate-900 border border-white/5">Auth Microservice</div>
+                        <div className="px-3 py-1.5 rounded bg-slate-900 border border-white/5">Orders Microservice</div>
+                        <div className="px-3 py-1.5 rounded bg-slate-900 border border-white/5">Catalog Microservice</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="border-t border-slate-100 pt-3 mt-4">
-                  <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest font-mono">Example</div>
-                  <span className="text-xs text-slate-800 font-semibold">{pat.example}</span>
-                </div>
-              </div>
-            ))}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </section>
 
-      {/* 6. SUCCESS STORY */}
+      {/* 6. SUCCESS STORY (REDESIGNED: INTERACTIVE TABS & METRICS) */}
       <section className="relative bg-gradient-to-b from-[#f0f5fd] via-[#f8fafc] to-[#edf4fc] py-20 border-b border-black/5 text-slate-950">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
             <h2 className="text-[10px] font-black tracking-widest text-[#2C5EAD] uppercase font-mono">integration::success</h2>
             <h3 className="text-3xl font-extrabold tracking-tight text-slate-900">Integration Success Story</h3>
           </div>
 
-          <div className="p-8 rounded-3xl bg-white border border-slate-200/80 shadow-sm relative overflow-hidden">
-            <div className="space-y-4">
-              <h4 className="text-lg font-bold text-slate-900">{successStory.title}</h4>
-              <div className="grid md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
-                <div className="space-y-1">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest font-mono">The Challenge</span>
-                  <p className="text-xs text-slate-600 leading-relaxed">{successStory.challenge}</p>
+          <div className="grid lg:grid-cols-12 gap-8 items-stretch max-w-6xl mx-auto">
+            {/* Left Column: Interactive Story card with sub-tabs */}
+            <div className="lg:col-span-8 p-8 rounded-3xl bg-white border-2 border-[#2C5EAD]/25 shadow-[0_15px_40px_rgba(10,12,22,0.06)] hover:shadow-[0_20px_50px_rgba(44,94,173,0.12)] hover:border-[#2C5EAD]/50 hover:scale-[1.005] transition-all duration-300 flex flex-col justify-between h-full">
+              <div className="space-y-6">
+                <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                  <h4 className="text-lg font-black text-slate-900">{successStory.title}</h4>
+                  <div className="flex space-x-1">
+                    {["challenge", "solution", "results"].map((tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => setActiveStoryTab(tab)}
+                        className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider font-mono transition-colors ${
+                          activeStoryTab === tab 
+                            ? "bg-[#2C5EAD] text-white" 
+                            : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                        }`}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest font-mono">Our Solution</span>
-                  <p className="text-xs text-slate-600 leading-relaxed">{successStory.solution}</p>
-                </div>
+
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeStoryTab}
+                    initial={{ opacity: 0, x: 5 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -5 }}
+                    transition={{ duration: 0.2 }}
+                    className="min-h-[140px]"
+                  >
+                    {activeStoryTab === "challenge" && (
+                      <div className="space-y-2">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest font-mono">Platform Obstacle</span>
+                        <p className="text-sm text-slate-600 leading-relaxed">{successStory.challenge}</p>
+                      </div>
+                    )}
+                    {activeStoryTab === "solution" && (
+                      <div className="space-y-2">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest font-mono">Our Architecture</span>
+                        <p className="text-sm text-slate-600 leading-relaxed">{successStory.solution}</p>
+                      </div>
+                    )}
+                    {activeStoryTab === "results" && (
+                      <div className="space-y-2.5">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest font-mono mb-1 block">Proven Metrics</span>
+                        <ul className="space-y-2">
+                          {successStory.results.map((res, i) => (
+                            <li key={i} className="flex items-center text-xs text-slate-700">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 mr-2 flex-shrink-0" />
+                              <span>{res}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
               </div>
-              <div className="border-t border-slate-100 pt-4">
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest font-mono mb-2 block">Key Results</span>
-                <ul className="space-y-1.5">
-                  {successStory.results.map((res, i) => (
-                    <li key={i} className="flex items-center text-xs text-slate-800">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 mr-2 flex-shrink-0" />
-                      <span>{res}</span>
-                    </li>
-                  ))}
-                </ul>
+            </div>
+
+            {/* Right Column: Performance Stats Widget */}
+            <div className="lg:col-span-4 p-8 rounded-3xl bg-[#090b16] text-white border border-white/5 flex flex-col justify-between text-center min-h-[250px] lg:min-h-0">
+              <div className="space-y-4 w-full my-auto">
+                <span className="text-[9px] font-bold text-[#4BB8FA] uppercase tracking-wider block font-mono">Integration Output</span>
+                
+                <div className="space-y-6">
+                  <div>
+                    <div className="text-3xl font-black text-white font-mono">15+ API Gateway</div>
+                    <span className="text-[9px] text-slate-400 uppercase tracking-widest font-mono mt-1 block">Connected Gateways</span>
+                  </div>
+                  
+                  <div className="border-t border-white/5 pt-4">
+                    <div className="text-3xl font-black text-emerald-400 font-mono">-40% Latency</div>
+                    <span className="text-[9px] text-slate-400 uppercase tracking-widest font-mono mt-1 block">Avg Response Boost</span>
+                  </div>
+
+                  <div className="border-t border-white/5 pt-4">
+                    <div className="text-3xl font-black text-cyan-400 font-mono">99.99% Uptime</div>
+                    <span className="text-[9px] text-slate-400 uppercase tracking-widest font-mono mt-1 block">System Availability</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 7. TECHNOLOGIES WE USE */}
+      {/* 7. TECHNOLOGIES WE USE (REDESIGNED: CONTINUOUS HORIZONTAL MARQUEE) */}
       <section className="relative bg-gradient-to-b from-[#edf4fc] via-[#e6effb] to-[#d6e5fb] py-20 border-b border-black/5 text-slate-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
+          <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
             <h2 className="text-[10px] font-black tracking-widest text-[#2C5EAD] uppercase font-mono">technical::modules</h2>
-            <h3 className="text-3xl font-extrabold tracking-tight text-slate-900">Integration Technologies</h3>
+            <h3 className="text-3xl font-extrabold tracking-tight text-slate-900">Integration Technologies We Deploy</h3>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
-            {techStack.map((tech) => (
-              <div 
-                key={tech.name} 
-                className="p-4 bg-white/80 border border-slate-200/60 rounded-xl flex flex-col justify-center text-center shadow-sm"
-              >
-                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest block font-mono mb-1">{tech.category}</span>
-                <span className="text-sm font-bold text-slate-800">{tech.name}</span>
-              </div>
-            ))}
+          <div className="relative w-full overflow-hidden py-4 select-none">
+            {/* Left fade gradient overlay */}
+            <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-[#edf4fc] to-transparent z-10 pointer-events-none" />
+            {/* Right fade gradient overlay */}
+            <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-[#d6e5fb] to-transparent z-10 pointer-events-none" />
+
+            <motion.div 
+              className="flex space-x-6 w-max"
+              animate={{ x: [0, -1120] }}
+              transition={{
+                repeat: Infinity,
+                ease: "linear",
+                duration: 25
+              }}
+            >
+              {/* Infinite scroller block: loop 3 times */}
+              {[...techStack, ...techStack, ...techStack].map((tech, idx) => (
+                <div 
+                  key={idx} 
+                  className="p-5 bg-white border border-slate-200/80 rounded-2xl flex flex-col justify-center text-center shadow-sm w-44 flex-shrink-0"
+                >
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block font-mono mb-1">{tech.category}</span>
+                  <span className="text-sm font-extrabold text-slate-800">{tech.name}</span>
+                </div>
+              ))}
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* 8. FAQs */}
-      <section className="relative bg-gradient-to-b from-[#d6e5fb] via-[#f1f5f9] to-[#ffffff] py-20 overflow-hidden text-slate-950">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-            <h2 className="text-[10px] font-black tracking-widest text-[#2C5EAD] uppercase font-mono">common::inquiries</h2>
-            <h3 className="text-3xl font-extrabold tracking-tight text-slate-900">Frequently Asked Questions</h3>
+      {/* 8. FAQs (REDESIGNED: WATERMARK & ACCORDION PAGINATION) */}
+      <section className="relative bg-gradient-to-b from-[#d6e5fb] via-[#e6effb] to-[#edf4fc] py-24 overflow-hidden text-slate-950 border-b border-slate-100">
+        {/* Header Section */}
+        <div className="text-center max-w-4xl mx-auto mb-16 relative">
+          {/* Watermark text behind */}
+          <div className="absolute inset-0 flex items-center justify-center -top-8 pointer-events-none select-none overflow-hidden">
+            <span className="text-5xl sm:text-7xl md:text-8xl font-black text-slate-100 tracking-wider whitespace-nowrap opacity-70 uppercase">
+              Frequently Ask Question
+            </span>
           </div>
+          
+          <h3 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 relative z-10">
+            Frequently Ask Question
+          </h3>
+          <p className="text-sm font-bold text-cyan-600 mt-2 relative z-10 cursor-pointer hover:underline">
+            <Link href="/contact">Click Here to contact now.</Link>
+          </p>
+        </div>
 
-          <div className="space-y-4">
-            {faqs.map((faq, idx) => {
-              const isOpen = openFaqIndex === idx;
-              return (
-                <div key={idx} className="border border-slate-200/85 rounded-2xl overflow-hidden bg-white/70 hover:bg-white transition-colors shadow-sm">
-                  <button
-                    onClick={() => toggleFaq(idx)}
-                    className="w-full flex justify-between items-center p-6 text-left font-bold text-slate-900 text-sm sm:text-base focus:outline-none"
-                  >
-                    <span>{faq.q}</span>
-                    <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180 text-[#2C5EAD]" : ""}`} />
-                  </button>
-
-                  <AnimatePresence initial={false}>
-                    {isOpen && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-12 gap-12 items-start">
+            
+            {/* Left Column: Accordions & Pagination */}
+            <div className="lg:col-span-7 flex flex-col space-y-4">
+              <div className="space-y-4 min-h-[380px]">
+                {faqs.slice(faqPage * 3, (faqPage + 1) * 3).map((faq, pageIdx) => {
+                  const globalIdx = faqPage * 3 + pageIdx;
+                  const isOpen = openFaqIndex === globalIdx;
+                  return (
+                    <div 
+                      key={globalIdx} 
+                      className="border border-slate-100 rounded-xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.03)] overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)]"
+                    >
+                      <button
+                        onClick={() => toggleFaq(globalIdx)}
+                        className="w-full flex justify-between items-center p-6 text-left font-bold text-slate-900 text-sm sm:text-base focus:outline-none"
                       >
-                        <div className="px-6 pb-6 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100">
-                          {faq.a}
+                        <span>{faq.q}</span>
+                        <div className="w-8 h-8 rounded-full bg-[#2C5EAD] hover:bg-[#1591DC] flex items-center justify-center text-white text-base font-black flex-shrink-0 transition-colors shadow-sm">
+                          {isOpen ? "−" : "+"}
                         </div>
-                      </motion.div>
+                      </button>
+
+                      <AnimatePresence initial={false}>
+                        {isOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.25 }}
+                          >
+                            <div className="px-6 pb-6 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-50">
+                              {faq.a}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-start gap-4 pt-6 pl-4">
+                <button 
+                  onClick={() => setFaqPage(0)}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-all shadow-sm ${
+                    faqPage === 0 ? "bg-[#2C5EAD] scale-105" : "bg-[#2C5EAD]/70 hover:bg-[#2C5EAD]"
+                  }`}
+                >
+                  1
+                </button>
+                <button 
+                  onClick={() => setFaqPage(1)}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-all shadow-sm ${
+                    faqPage === 1 ? "bg-[#2C5EAD] scale-105" : "bg-[#2C5EAD]/70 hover:bg-[#2C5EAD]"
+                  }`}
+                >
+                  2
+                </button>
+              </div>
+            </div>
+
+            {/* Right Column: Illustration & Question Input Form */}
+            <div className="lg:col-span-5 flex flex-col items-center p-8 bg-slate-50/50 rounded-3xl border border-slate-100 shadow-[0_10px_40px_rgba(0,0,0,0.02)]">
+              {/* Question mark illustration */}
+              <div className="w-56 h-48 relative mb-6">
+                <img 
+                  src="/assets/api_faq_illustration.png" 
+                  alt="API FAQ Illustration" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+
+              <h4 className="text-2xl font-extrabold text-slate-900 mb-1">Any Question?</h4>
+              <p className="text-xs text-slate-500 text-center mb-6">
+                Ask us anything about REST, GraphQL, API Gateways, and system integrations.
+              </p>
+
+              {/* Submission Form */}
+              <div className="w-full space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono pl-1">
+                    Let me know.
+                  </label>
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      placeholder="Enter Here"
+                      value={faqInput}
+                      onChange={(e) => setFaqInput(e.target.value)}
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-xs sm:text-sm focus:outline-none focus:border-[#2C5EAD] pr-10 shadow-sm"
+                    />
+                    {faqInput && (
+                      <button 
+                        onClick={() => setFaqInput("")}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold font-mono"
+                      >
+                        ×
+                      </button>
                     )}
-                  </AnimatePresence>
+                  </div>
                 </div>
-              );
-            })}
+
+                <div className="flex justify-center pt-2">
+                  <button 
+                    onClick={() => {
+                      if (!faqInput.trim()) return;
+                      setFaqSent(true);
+                      setFaqInput("");
+                      setTimeout(() => setFaqSent(false), 4000);
+                    }}
+                    className="w-full sm:w-auto px-10 py-3 bg-[#2C5EAD] hover:bg-[#1591DC] text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-[#2C5EAD]/20 active:scale-95"
+                  >
+                    {faqSent ? "Sent Successfully!" : "Sent"}
+                  </button>
+                </div>
+                
+                {faqSent && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center text-[10px] font-bold text-emerald-600 font-mono mt-2"
+                  >
+                    Thank you! Your question has been forwarded to our support queue.
+                  </motion.div>
+                )}
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
 
       {/* 9. CALL TO ACTION */}
-      <section className="py-24 bg-gradient-to-b from-[#ffffff] via-[#6c97db] to-[#1d3f75] text-white overflow-hidden relative">
+      <section className="py-24 bg-gradient-to-b from-[#edf4fc] via-[#6c97db] to-[#1d3f75] text-white overflow-hidden relative">
         <div className="absolute inset-0 grid-pattern opacity-10 pointer-events-none" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
         

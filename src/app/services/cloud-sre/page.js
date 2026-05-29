@@ -6,7 +6,8 @@ import { motion, AnimatePresence, useScroll, useTransform, useMotionValue } from
 import { 
   ArrowRight, Check, CheckCircle2, ChevronDown, Server,
   Zap, Cpu, Sparkles, Database, Lock, Globe, ArrowUpRight, 
-  Layers, Settings, Play, Cloud, ShieldAlert, ThumbsUp
+  Layers, Settings, Play, Cloud, ShieldAlert, ThumbsUp,
+  Terminal, Activity, RefreshCw, Sliders
 } from "lucide-react";
 
 export default function CloudSrePage() {
@@ -18,6 +19,184 @@ export default function CloudSrePage() {
   const toggleFaq = (index) => {
     setOpenFaqIndex(openFaqIndex === index ? null : index);
   };
+
+  const [activePillar, setActivePillar] = useState("migration");
+  const [terminalLogs, setTerminalLogs] = useState([]);
+  const [activeMigrationStep, setActiveMigrationStep] = useState(0);
+  const [activeTuningIds, setActiveTuningIds] = useState(["rightSize", "autoscaling", "cleanup"]);
+  const [displayedSavings, setDisplayedSavings] = useState(4200);
+
+  const consoleScripts = {
+    migration: [
+      "guest@sre-console:~$ cat db_migration_worker.js",
+      "// Database migration task configuration",
+      "const migrationConfig = {",
+      "  source: \"postgres://on-premise-db:5432/prod\",",
+      "  target: \"postgres://rds-cluster.aws.internal/prod\",",
+      "  syncOptions: {",
+      "    concurrency: 4,",
+      "    enableReplicationTunnel: true,",
+      "    verifyDataIntegrity: true",
+      "  },",
+      "  tables: [\"users\", \"orders\", \"ledger\"]",
+      "};",
+      "",
+      "async function runMigration() {",
+      "  console.log(\"Initializing secure database sync...\");",
+      "  await SchemaMigrator.sync(migrationConfig);",
+      "  await DataReplicator.start(migrationConfig);",
+      "}",
+      "// Connection tunnel established ... [OK]",
+      "// Replicating records (3.4M records) ... [SUCCESS]"
+    ],
+    iac: [
+      "guest@sre-console:~$ cat main.tf",
+      "# Infrastructure as Code: AWS VPC Network setup",
+      "resource \"aws_vpc\" \"prod_network\" {",
+      "  cidr_block           = \"10.0.0.0/16\"",
+      "  enable_dns_hostnames = true",
+      "  tags = {",
+      "    Environment = \"production\"",
+      "    ManagedBy   = \"terraform\"",
+      "  }",
+      "}",
+      "",
+      "module \"eks_cluster\" {",
+      "  source          = \"terraform-aws-modules/eks/aws\"",
+      "  cluster_name    = \"prod-k8s-orchestrator\"",
+      "  vpc_id          = aws_vpc.prod_network.id",
+      "  subnets         = aws_vpc.prod_network.private_subnets",
+      "  instance_types  = [\"m5.xlarge\"]",
+      "  desired_capacity = 3",
+      "}",
+      "# terraform validate ... [SUCCESS]",
+      "# terraform plan ... 15 resources to add, 0 to destroy"
+    ],
+    sre: [
+      "guest@sre-console:~$ cat prometheus_alerts.yml",
+      "# Site Reliability Engineering monitoring rules",
+      "apiVersion: monitoring.coreos.com/v1",
+      "kind: PrometheusRule",
+      "metadata:",
+      "  name: sre-sla-alerts",
+      "spec:",
+      "  groups:",
+      "  - name: api-slo-rules",
+      "    rules:",
+      "    - alert: HighErrorRate",
+      "      expr: sum(rate(http_requests_total{status=~\"5..\"}[5m])) > 0.001",
+      "      for: 2m",
+      "      labels:",
+      "        severity: critical",
+      "        tier: sre",
+      "      annotations:",
+      "        summary: \"Error rate is high: SLA error budget at risk\"",
+      "# Prometheus service status ... [OK]",
+      "# Active target health check ... [99.995% SLA COMPLIANT]"
+    ]
+  };
+
+  useEffect(() => {
+    setTerminalLogs([]);
+    let currentIdx = 0;
+    const script = consoleScripts[activePillar];
+    setTerminalLogs([script[0]]);
+
+    const interval = setInterval(() => {
+      currentIdx++;
+      if (currentIdx < script.length) {
+        setTerminalLogs(prev => [...prev, script[currentIdx]]);
+      } else {
+        clearInterval(interval);
+      }
+    }, 200);
+
+    return () => clearInterval(interval);
+  }, [activePillar]);
+
+  const costTuningItems = [
+    {
+      id: "rightSize",
+      title: "Right-sizing Instances",
+      desc: "Analyze CPU/RAM load metrics to scale down over-provisioned nodes.",
+      saving: 1800,
+      percent: 12,
+      icon: Cpu,
+    },
+    {
+      id: "reserved",
+      title: "Reserved Configurations",
+      desc: "Lock in committed usage discounts (1-3 year terms) for base workloads.",
+      saving: 1400,
+      percent: 9,
+      icon: Lock,
+    },
+    {
+      id: "spot",
+      title: "Spot Workload Run",
+      desc: "Use spare cloud capacity for fault-tolerant and batch processing tasks.",
+      saving: 1100,
+      percent: 7,
+      icon: Zap,
+    },
+    {
+      id: "autoscaling",
+      title: "Auto-scaling Thresholds",
+      desc: "Provision capacity dynamically based on active request volumes.",
+      saving: 1500,
+      percent: 10,
+      icon: Server,
+    },
+    {
+      id: "storage",
+      title: "Storage Lifecycle Rules",
+      desc: "Move cold assets automatically to archive storage classes.",
+      saving: 600,
+      percent: 4,
+      icon: Database,
+    },
+    {
+      id: "cleanup",
+      title: "Unused Resources Sweep",
+      desc: "Detect and release orphan elastic IPs, detached disks, and idle DBs.",
+      saving: 900,
+      percent: 6,
+      icon: Settings,
+    },
+    {
+      id: "multiregion",
+      title: "Multi-region Tuning",
+      desc: "Reroute cloud data transfer paths to bypass high egress zone fees.",
+      saving: 700,
+      percent: 5,
+      icon: Globe,
+    }
+  ];
+
+  const targetSavings = costTuningItems
+    .filter(item => activeTuningIds.includes(item.id))
+    .reduce((sum, item) => sum + item.saving, 0);
+
+  useEffect(() => {
+    let start = displayedSavings;
+    const end = targetSavings;
+    if (start === end) return;
+
+    const diff = end - start;
+    const step = Math.ceil(Math.abs(diff) / 10) * (diff > 0 ? 1 : -1);
+
+    const timer = setInterval(() => {
+      start += step;
+      if ((diff > 0 && start >= end) || (diff < 0 && start <= end)) {
+        setDisplayedSavings(end);
+        clearInterval(timer);
+      } else {
+        setDisplayedSavings(start);
+      }
+    }, 20);
+
+    return () => clearInterval(timer);
+  }, [targetSavings]);
 
   // Scroll targets for Success Stories Sticky animation
   const successStoriesRef = useRef(null);
@@ -148,15 +327,7 @@ export default function CloudSrePage() {
     }
   ];
 
-  const costTuning = [
-    "Right-sizing instances based on actual usage",
-    "Reserved instances & savings plans configurations",
-    "Spot instances for non-critical workloads",
-    "Auto-scaling policies triggered by threshold metrics",
-    "Storage lifecycle policies & automatic archives",
-    "Unused resources identification and cleanup",
-    "Multi-region cost analysis"
-  ];
+  // costTuning configuration replaced by costTuningItems
 
   const successStories = [
     {
@@ -298,7 +469,7 @@ export default function CloudSrePage() {
         </div>
       </section>
 
-      {/* 2. THE THREE-COLUMN APPROACH */}
+      {/* 2. THE THREE-COLUMN APPROACH (REDESIGNED: INTERACTIVE CONSOLE) */}
       <section className="relative bg-gradient-to-b from-[#101733] via-[#152147] to-[#1c2c5c] py-20 border-b border-white/5 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
@@ -306,34 +477,214 @@ export default function CloudSrePage() {
             <h3 className="text-3xl font-extrabold tracking-tight text-white">Our SRE & Infrastructure Approach</h3>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
-            {Object.entries(approach).map(([key, value]) => (
-              <div 
-                key={key}
-                className="p-8 rounded-3xl bg-slate-900/60 border border-white/5 hover:border-purple-500/30 transition-all flex flex-col justify-between"
-              >
-                <div className="space-y-4">
-                  <h4 className="text-lg font-bold text-white">{value.title}</h4>
-                  <p className="text-xs text-slate-400 leading-relaxed">{value.desc}</p>
-                  
-                  <ul className="space-y-2.5 pt-4 border-t border-white/5">
-                    {value.bullets.map((b) => (
-                      <li key={b} className="flex items-start text-xs text-slate-300">
-                        <Check className="w-4 h-4 text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
-                        <span>{b}</span>
-                      </li>
-                    ))}
-                  </ul>
+          <div className="grid lg:grid-cols-12 gap-8 items-stretch">
+            {/* Left Column: Interactive Tab Selector and Info */}
+            <div className="lg:col-span-5 flex flex-col justify-between space-y-6">
+              <div className="flex flex-col space-y-3">
+                {Object.entries(approach).map(([key, value]) => {
+                  const isActive = activePillar === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setActivePillar(key)}
+                      className={`text-left p-5 rounded-2xl border transition-all duration-300 flex items-center justify-between ${
+                        isActive
+                          ? "bg-[#1b203a] border-[#2C5EAD] shadow-lg shadow-[#2C5EAD]/10 text-white"
+                          : "bg-slate-900/40 border-white/5 text-slate-400 hover:border-white/10 hover:text-white"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className={`p-2.5 rounded-xl ${isActive ? "bg-[#2C5EAD]/20 text-[#4BB8FA]" : "bg-slate-800 text-slate-400"}`}>
+                          {key === "migration" && <Cloud className="w-5 h-5" />}
+                          {key === "iac" && <Settings className="w-5 h-5" />}
+                          {key === "sre" && <Activity className="w-5 h-5" />}
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-extrabold tracking-wide">{value.title}</h4>
+                          <p className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">{value.desc}</p>
+                        </div>
+                      </div>
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isActive ? "-rotate-90 text-[#4BB8FA]" : "text-slate-500"}`} />
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Dynamic Info Panel */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activePillar}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                  className="p-6 rounded-3xl bg-slate-900/60 border border-white/5 flex flex-col justify-between flex-grow"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                      <span className="text-[9px] font-bold text-cyan-400 font-mono uppercase tracking-wider">active_scope::details</span>
+                    </div>
+                    <h4 className="text-xl font-bold text-white">{approach[activePillar].title}</h4>
+                    <p className="text-xs text-slate-300 leading-relaxed">{approach[activePillar].desc}</p>
+                    
+                    <ul className="space-y-2.5 pt-4 border-t border-white/5">
+                      {approach[activePillar].bullets.map((b) => (
+                        <li key={b} className="flex items-start text-xs text-slate-300">
+                          <Check className="w-4 h-4 text-cyan-400 mr-2 flex-shrink-0 mt-0.5" />
+                          <span>{b}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Right Column: Console CLI Simulation */}
+            <div className="lg:col-span-7 flex flex-col justify-between bg-slate-950/60 border border-white/5 p-6 rounded-3xl relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-tr from-[#1b203a]/10 to-transparent pointer-events-none" />
+              
+              <div className="space-y-4 relative z-10 w-full">
+                {/* Console Window */}
+                <div className="rounded-2xl border border-white/10 bg-[#060813] overflow-hidden shadow-2xl flex flex-col h-72">
+                  {/* Console Header */}
+                  <div className="bg-[#101428] px-4 py-3 flex items-center justify-between border-b border-white/5 select-none">
+                    <div className="flex items-center space-x-1.5">
+                      <div className="w-3 h-3 rounded-full bg-red-500/80" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+                      <div className="w-3 h-3 rounded-full bg-green-500/80" />
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400 font-mono flex items-center gap-1.5">
+                      <Terminal className="w-3.5 h-3.5 text-cyan-400" />
+                      sre-console -- bash
+                    </span>
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 font-mono animate-pulse">
+                      CONNECTED
+                    </span>
+                  </div>
+
+                  {/* Console Body */}
+                  <div className="p-4 overflow-y-auto font-mono text-[10px] text-slate-300 leading-relaxed flex-grow space-y-1.5 scrollbar-thin scrollbar-thumb-slate-800">
+                    {terminalLogs.map((log, index) => {
+                      const formatLog = (l) => {
+                        if (l.startsWith("guest@sre-console:~$")) {
+                          return (
+                            <span className="text-slate-400">
+                              <span className="text-[#c084fc]">guest@sre-console</span>
+                              <span className="text-slate-500">:</span>
+                              <span className="text-[#3b82f6]">~$</span>{" "}
+                              <span className="text-white font-semibold">{l.substring(21)}</span>
+                            </span>
+                          );
+                        }
+                        if (l.startsWith("//") || l.startsWith("#")) {
+                          if (l.includes("[OK]") || l.includes("[SUCCESS]") || l.includes("SUCCESS")) {
+                            return <span className="text-emerald-400 font-bold">{l}</span>;
+                          }
+                          return <span className="text-slate-500 italic">{l}</span>;
+                        }
+                        
+                        // Basic syntax highlights for code structures
+                        let styleClass = "text-slate-300";
+                        if (l.includes("const ") || l.includes("function ") || l.includes("resource ") || l.includes("module ") || l.includes("apiVersion:") || l.includes("kind:")) {
+                          styleClass = "text-cyan-400 font-medium";
+                        } else if (l.includes(":") && !l.includes("//")) {
+                          styleClass = "text-indigo-300";
+                        }
+                        
+                        return <span className={styleClass}>{l}</span>;
+                      };
+                      return (
+                        <div key={index} className="flex items-start">
+                          <span className="text-slate-600 mr-2.5 select-none">{index + 1}</span>
+                          <div>{formatLog(log)}</div>
+                        </div>
+                      );
+                    })}
+                    <span className="inline-block w-1.5 h-3.5 bg-cyan-400 ml-1 animate-pulse" />
+                  </div>
+                </div>
+
+                {/* Sub-Console Live Micro-Metrics */}
+                <div className="grid grid-cols-3 gap-4 pt-2">
+                  <div className="p-3.5 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block font-mono">
+                      {activePillar === "migration" ? "DB SYNC RATE" : activePillar === "iac" ? "STATE DRIFTS" : "CPU CLUSTER LOAD"}
+                    </span>
+                    <span className="text-sm font-extrabold text-white font-mono flex items-center gap-1.5">
+                      <RefreshCw className={`w-3.5 h-3.5 text-cyan-400 ${activePillar === "migration" ? "animate-spin" : ""}`} />
+                      {activePillar === "migration" && "99.98%"}
+                      {activePillar === "iac" && "0 Drifts"}
+                      {activePillar === "sre" && "34.8%"}
+                    </span>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block font-mono">
+                      {activePillar === "migration" ? "MIGRATED CAPACITY" : activePillar === "iac" ? "RESOURCES BUILT" : "PODS HEALTHY"}
+                    </span>
+                    <span className="text-sm font-extrabold text-white font-mono flex items-center gap-1.5">
+                      <Database className="w-3.5 h-3.5 text-indigo-400" />
+                      {activePillar === "migration" && "1.2 TB / 1.2 TB"}
+                      {activePillar === "iac" && "15 Objects"}
+                      {activePillar === "sre" && "3/3 active"}
+                    </span>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block font-mono">
+                      {activePillar === "migration" ? "NETWORK THROTTLE" : activePillar === "iac" ? "GITOPS COMMITS" : "COMPLIANCE SLA"}
+                    </span>
+                    <span className="text-sm font-extrabold text-white font-mono flex items-center gap-1.5">
+                      <Cpu className="w-3.5 h-3.5 text-purple-400" />
+                      {activePillar === "migration" && "112 MB/s"}
+                      {activePillar === "iac" && "a8f3d1e (main)"}
+                      {activePillar === "sre" && "99.995%"}
+                    </span>
+                  </div>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* 3. SUPPORTED PLATFORMS */}
       <section className="relative bg-gradient-to-b from-[#1c2c5c] via-[#263c75] to-[#334e8f] py-20 border-b border-white/5 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Floating Background Cloud */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden">
+          <motion.div
+            animate={{ 
+              y: [0, -15, 0],
+              rotate: [0, 1, 0]
+            }}
+            transition={{ 
+              repeat: Infinity, 
+              duration: 6, 
+              ease: "easeInOut" 
+            }}
+            className="w-[480px] h-[480px] relative opacity-[0.12] sm:opacity-[0.16]"
+          >
+            {/* Glow Aura */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] rounded-full bg-cyan-400/25 blur-[90px] pointer-events-none" />
+            
+            <svg 
+              className="w-full h-full text-cyan-400"
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="0.4"
+              strokeDasharray="0.8 2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M17.5 19A3.5 3.5 0 0 0 21 15.5c0-2.79-2.54-4.5-5-4.5-.54 0-1.1.09-1.61.26A5.5 5.5 0 0 0 4.5 13a4.5 4.5 0 0 0 0 9h13Z" />
+            </svg>
+          </motion.div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
             <h2 className="text-[10px] font-black tracking-widest text-[#4BB8FA] uppercase font-mono">supported::ecosystem</h2>
             <h3 className="text-3xl font-extrabold tracking-tight text-white">Cloud Platforms We Support</h3>
@@ -343,7 +694,7 @@ export default function CloudSrePage() {
             {cloudPlatforms.map((plat) => (
               <div 
                 key={plat.name}
-                className={`p-6 rounded-2xl bg-slate-950/40 border ${plat.color} flex flex-col space-y-3`}
+                className={`p-6 rounded-2xl bg-slate-950/40 border ${plat.color} flex flex-col space-y-3 backdrop-blur-sm`}
               >
                 <h4 className="text-base font-bold text-white">{plat.name}</h4>
                 <p className="text-xs text-slate-300 leading-relaxed">{plat.desc}</p>
@@ -354,63 +705,440 @@ export default function CloudSrePage() {
       </section>
 
       {/* 4. MIGRATION TIMELINE PROCESS */}
-      <section id="process" className="relative bg-gradient-to-b from-[#334e8f] via-[#5978be] to-[#8da8df] py-20 border-b border-white/5 overflow-hidden">
+      <section id="process" className="relative bg-gradient-to-b from-[#334e8f] via-[#5978be] to-[#cddbf7] py-20 border-b border-white/5 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-3 text-white">
             <h2 className="text-[10px] font-black tracking-widest text-slate-300 uppercase font-mono">migration::waves</h2>
             <h3 className="text-3xl font-extrabold tracking-tight text-white">The Migration Process</h3>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {migrationSteps.map((step, idx) => (
-              <div 
-                key={step.title}
-                className="p-6 rounded-3xl bg-[#090b16]/95 border border-white/5 flex flex-col justify-between h-full"
-              >
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-3xl font-black font-mono text-[#4BB8FA]">0{idx + 1}</span>
+          {/* Custom Horizontal Step Pipeline Stepper */}
+          <div className="relative max-w-4xl mx-auto mb-12 select-none">
+            {/* SVG Connecting pipeline underlay */}
+            <div className="absolute top-[22px] left-0 right-0 h-0.5 bg-[#ffffff]/10 -z-10 hidden sm:block">
+              <motion.div 
+                className="h-full bg-gradient-to-r from-cyan-400 via-indigo-500 to-[#10b981]" 
+                style={{ width: `${(activeMigrationStep / 3) * 100}%` }}
+                layoutId="stepper-pipeline"
+                transition={{ type: "spring", stiffness: 80, damping: 15 }}
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-6 sm:gap-0">
+              {migrationSteps.map((step, idx) => {
+                const isActive = activeMigrationStep === idx;
+                const isCompleted = idx < activeMigrationStep;
+                return (
+                  <button
+                    key={step.title}
+                    onClick={() => setActiveMigrationStep(idx)}
+                    className="flex flex-col items-center group relative z-10 focus:outline-none"
+                  >
+                    <div 
+                      className={`w-12 h-12 rounded-full flex items-center justify-center font-mono font-bold text-sm transition-all duration-300 border shadow-lg ${
+                        isActive
+                          ? "bg-slate-900 text-white border-cyan-400 scale-110 shadow-cyan-400/20"
+                          : isCompleted
+                          ? "bg-cyan-500 text-slate-950 border-cyan-500 shadow-cyan-500/10"
+                          : "bg-slate-950 text-slate-400 border-white/10 hover:border-white/30 hover:text-white"
+                      }`}
+                    >
+                      0{idx + 1}
+                    </div>
+                    <span className={`text-[11px] font-extrabold font-mono tracking-wider mt-2.5 transition-colors duration-300 uppercase ${
+                      isActive ? "text-white" : "text-slate-300 group-hover:text-white"
+                    }`}>
+                      {step.title}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Details & Visual Pipeline */}
+          <div className="grid lg:grid-cols-12 gap-8 items-stretch max-w-6xl mx-auto">
+            {/* Left Card: Details for active step */}
+            <div className="lg:col-span-5 flex flex-col justify-between">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeMigrationStep}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.3 }}
+                  className="p-8 rounded-3xl bg-[#090b16]/95 border border-white/5 flex flex-col justify-between h-full"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[10px] font-bold text-cyan-400 bg-cyan-950/50 border border-cyan-500/30 px-2.5 py-0.5 rounded-full uppercase tracking-wider font-mono">
+                        step_wave::0{activeMigrationStep + 1}
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-bold text-white">{migrationSteps[activeMigrationStep].title}</h3>
+                    <p className="text-xs text-slate-300 leading-relaxed">{migrationSteps[activeMigrationStep].desc}</p>
                   </div>
-                  <h4 className="text-base font-bold text-white">{step.title}</h4>
-                  <p className="text-xs text-slate-400 leading-relaxed">{step.desc}</p>
-                </div>
-                <div className="border-t border-white/5 pt-4 mt-6">
-                  <ul className="space-y-1.5">
-                    {step.bullets.map((b) => (
-                      <li key={b} className="flex items-center text-[10px] text-slate-300">
-                        <Check className="w-3.5 h-3.5 text-[#4BB8FA] mr-2 flex-shrink-0" />
-                        <span>{b}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                  <div className="border-t border-white/5 pt-5 mt-6">
+                    <ul className="space-y-2">
+                      {migrationSteps[activeMigrationStep].bullets.map((b) => (
+                        <li key={b} className="flex items-center text-xs text-slate-300">
+                          <Check className="w-4 h-4 text-cyan-400 mr-2 flex-shrink-0" />
+                          <span>{b}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Right Card: SVG Visual Network Pipeline */}
+            <div className="lg:col-span-7 p-6 rounded-3xl bg-[#090b16]/95 border border-white/5 flex flex-col items-center justify-center relative overflow-hidden h-[300px] lg:h-auto">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.02),transparent_70%)] pointer-events-none" />
+              
+              <div className="w-full h-full max-w-[480px] max-h-[220px]">
+                <svg viewBox="0 0 500 240" className="w-full h-full select-none" fill="none">
+                  {/* Pipeline Path Connecting Nodes */}
+                  <path 
+                    d="M 120 120 C 200 120, 300 120, 380 120" 
+                    stroke="rgba(255, 255, 255, 0.08)" 
+                    strokeWidth="4" 
+                    strokeLinecap="round" 
+                  />
+                  <path 
+                    d="M 120 120 C 200 120, 300 120, 380 120" 
+                    stroke="url(#pipeline-grad)" 
+                    strokeWidth="4" 
+                    strokeLinecap="round" 
+                    strokeDasharray={activeMigrationStep === 2 ? "12, 12" : "none"} 
+                    className={activeMigrationStep === 2 ? "animate-pulse" : ""} 
+                  />
+                  
+                  {/* Gradient Definitions */}
+                  <defs>
+                    <linearGradient id="pipeline-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#22d3ee" />
+                      <stop offset="100%" stopColor="#818cf8" />
+                    </linearGradient>
+                    
+                    <linearGradient id="cloud-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#4f46e5" />
+                      <stop offset="100%" stopColor="#0891b2" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Left Node: Local Host Core Database / Rack */}
+                  <g transform="translate(60, 120)">
+                    {/* Glowing Aura if active */}
+                    {activeMigrationStep === 0 && (
+                      <motion.circle 
+                        r="55" 
+                        fill="rgba(34, 211, 238, 0.05)" 
+                        stroke="rgba(34, 211, 238, 0.15)"
+                        strokeWidth="1.5"
+                        animate={{ scale: [1, 1.25, 1], opacity: [0.8, 0.2, 0.8] }}
+                        transition={{ repeat: Infinity, duration: 2.5 }}
+                      />
+                    )}
+                    <rect x="-40" y="-45" width="80" height="90" rx="8" fill="#11142a" stroke="rgba(255,255,255,0.08)" strokeWidth="2" />
+                    
+                    {/* Server Rack Draw */}
+                    <rect x="-32" y="-35" width="64" height="15" rx="3" fill="#0c0e1e" stroke={activeMigrationStep === 0 ? "#22d3ee" : "rgba(255,255,255,0.05)"} strokeWidth="1" />
+                    <circle cx="-20" cy="-27.5" r="2.5" fill="#22d3ee" />
+                    <circle cx="-10" cy="-27.5" r="1.5" fill="#10b981" />
+                    <line x1="5" y1="-27.5" x2="24" y2="-27.5" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
+
+                    <rect x="-32" y="-12" width="64" height="15" rx="3" fill="#0c0e1e" stroke={activeMigrationStep === 0 ? "#22d3ee" : "rgba(255,255,255,0.05)"} strokeWidth="1" />
+                    <circle cx="-20" cy="-4.5" r="2.5" fill="#ef4444" className="animate-pulse" />
+                    <circle cx="-10" cy="-4.5" r="1.5" fill="#22d3ee" />
+                    <line x1="5" y1="-4.5" x2="24" y2="-4.5" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
+
+                    <rect x="-32" y="11" width="64" height="15" rx="3" fill="#0c0e1e" stroke={activeMigrationStep === 0 ? "#22d3ee" : "rgba(255,255,255,0.05)"} strokeWidth="1" />
+                    <circle cx="-20" cy="18.5" r="2.5" fill="#10b981" />
+                    <circle cx="-10" cy="18.5" r="1.5" fill="#10b981" />
+                    <line x1="5" y1="18.5" x2="24" y2="18.5" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
+
+                    <text x="0" y="58" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold" fontFamily="monospace">ON-PREM HOST</text>
+
+                    {/* Step 0 Radar Scan overlay */}
+                    {activeMigrationStep === 0 && (
+                      <g>
+                        <circle r="36" stroke="#22d3ee" strokeWidth="1.5" strokeDasharray="6, 6" className="animate-spin-slow" />
+                        <line x1="-36" y1="0" x2="36" y2="0" stroke="rgba(34, 211, 238, 0.3)" strokeWidth="1" />
+                      </g>
+                    )}
+                  </g>
+
+                  {/* Step 2: Flying Particle packets */}
+                  {activeMigrationStep === 2 && (
+                    <>
+                      <motion.circle
+                        cx="0"
+                        cy="0"
+                        r="5"
+                        fill="#22d3ee"
+                        className="shadow-sm shadow-cyan-400"
+                        animate={{
+                          x: [120, 250, 380],
+                          y: [120, 110, 120],
+                          scale: [0.7, 1.2, 0.7],
+                        }}
+                        transition={{
+                          duration: 2.2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      />
+                      <motion.circle
+                        cx="0"
+                        cy="0"
+                        r="4"
+                        fill="#818cf8"
+                        animate={{
+                          x: [120, 250, 380],
+                          y: [120, 130, 120],
+                        }}
+                        transition={{
+                          duration: 2.2,
+                          repeat: Infinity,
+                          delay: 0.7,
+                          ease: "easeInOut",
+                        }}
+                      />
+                      <motion.circle
+                        cx="0"
+                        cy="0"
+                        r="4"
+                        fill="#10b981"
+                        animate={{
+                          x: [120, 250, 380],
+                          y: [120, 115, 120],
+                        }}
+                        transition={{
+                          duration: 2.2,
+                          repeat: Infinity,
+                          delay: 1.4,
+                          ease: "easeInOut",
+                        }}
+                      />
+                    </>
+                  )}
+
+                  {/* Right Node: Cloud Target Infrastructure */}
+                  <g transform="translate(440, 120)">
+                    {/* Glowing Aura if active */}
+                    {(activeMigrationStep === 1 || activeMigrationStep === 3) && (
+                      <motion.circle 
+                        r="55" 
+                        fill="rgba(129, 140, 248, 0.05)" 
+                        stroke="rgba(129, 140, 248, 0.15)"
+                        strokeWidth="1.5"
+                        animate={{ scale: [1, 1.2, 1], opacity: [0.7, 0.3, 0.7] }}
+                        transition={{ repeat: Infinity, duration: 2.5 }}
+                      />
+                    )}
+                    
+                    {/* Cloud Node Draw */}
+                    <path 
+                      d="M -25 -15 C -25 -30, -5 -35, 5 -30 C 15 -35, 30 -30, 30 -15 C 38 -15, 38 -2, 30 5 C 30 15, 10 20, 0 15 C -15 20, -25 15, -25 5 C -35 5, -35 -15, -25 -15 Z" 
+                      fill="url(#cloud-grad)" 
+                      stroke="rgba(255,255,255,0.15)" 
+                      strokeWidth="2" 
+                    />
+
+                    <text x="0" y="42" textAnchor="middle" fill="#818cf8" fontSize="8" fontWeight="bold" fontFamily="monospace">CLOUD VPC</text>
+
+                    {/* Step 1: Planning (Draw Blueprint Lock/Shield) */}
+                    {activeMigrationStep === 1 && (
+                      <g transform="translate(0, -5)">
+                        <rect x="-14" y="-12" width="28" height="24" rx="4" fill="#0a0c16" stroke="#22d3ee" strokeWidth="1.5" />
+                        <circle cx="0" cy="-2" r="3" stroke="#22d3ee" strokeWidth="1.5" fill="none" />
+                        <path d="M -3 3 L 3 3" stroke="#22d3ee" strokeWidth="1.5" />
+                      </g>
+                    )}
+
+                    {/* Step 3: Optimization (Spinning Dial/Settings Gear) */}
+                    {activeMigrationStep === 3 && (
+                      <g transform="translate(0, -5)">
+                        <motion.g
+                          animate={{ rotate: 360 }}
+                          transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+                        >
+                          <circle r="14" stroke="#10b981" strokeWidth="3" strokeDasharray="6, 3" fill="none" />
+                          <circle r="7" fill="#10b981" />
+                        </motion.g>
+                        <circle r="3" fill="#ffffff" />
+                      </g>
+                    )}
+                  </g>
+                </svg>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* 5. COST OPTIMIZATION AND CHECKS */}
+      {/* 5. COST OPTIMIZATION AND CHECKS (REDESIGNED: CALCULATOR DASHBOARD) */}
       <section className="relative bg-gradient-to-b from-[#cddbf7] via-[#e2ecfa] to-[#f0f5fd] py-20 border-b border-black/5 text-slate-950">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
             <h2 className="text-[10px] font-black tracking-widest text-[#2C5EAD] uppercase font-mono">efficiency::audit</h2>
             <h3 className="text-3xl font-extrabold tracking-tight text-slate-900">Cost Optimization Guardrails</h3>
             <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-              We proactively audit and scale resources down to avoid runaway infrastructure bills.
+              Toggle our SRE tuning policies below to estimate your dynamic cloud cost savings.
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-            {costTuning.map((tune) => (
-              <div 
-                key={tune}
-                className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-sm flex items-start space-x-3"
-              >
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
-                <span className="text-xs text-slate-700 font-semibold">{tune}</span>
+          <div className="grid lg:grid-cols-12 gap-8 items-start">
+            {/* Left Column: Premium Interactive Cards */}
+            <div className="lg:col-span-7 grid sm:grid-cols-2 gap-4">
+              {costTuningItems.map((item) => {
+                const isActive = activeTuningIds.includes(item.id);
+                const IconComponent = item.icon;
+                
+                const handleToggle = () => {
+                  if (isActive) {
+                    setActiveTuningIds(activeTuningIds.filter(id => id !== item.id));
+                  } else {
+                    setActiveTuningIds([...activeTuningIds, item.id]);
+                  }
+                };
+
+                return (
+                  <motion.div
+                    key={item.id}
+                    onClick={handleToggle}
+                    whileHover={{ y: -4 }}
+                    className={`p-5 rounded-2xl border transition-all duration-300 flex flex-col justify-between cursor-pointer select-none ${
+                      isActive 
+                        ? "bg-[#f0f9ff] border-[#2C5EAD] shadow-md shadow-[#2C5EAD]/5" 
+                        : "bg-white border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
+                    }`}
+                  >
+                    <div className="flex justify-between items-center mb-4">
+                      <div className={`p-2 rounded-xl ${isActive ? "bg-[#2C5EAD]/15 text-[#2C5EAD]" : "bg-slate-100 text-slate-500"}`}>
+                        <IconComponent className="w-5 h-5" />
+                      </div>
+                      
+                      {/* Toggle Switch */}
+                      <div className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-200 ${isActive ? "bg-emerald-500" : "bg-slate-200"}`}>
+                        <div 
+                          className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 transform ${
+                            isActive ? "translate-x-4" : "translate-x-0"
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-extrabold text-slate-900">{item.title}</h4>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">{item.desc}</p>
+                    </div>
+
+                    <div className="pt-3.5 mt-3.5 border-t border-slate-100 flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">SAVINGS TARGET</span>
+                      <span className={`text-[10px] font-extrabold font-mono px-2 py-0.5 rounded ${
+                        isActive ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"
+                      }`}>
+                        +{item.percent}% / +${item.saving}
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {/* Right Column: Premium Calculator Visualizer Dashboard */}
+            <div className="lg:col-span-5 p-8 rounded-3xl bg-white border border-slate-200/80 shadow-xl flex flex-col items-center justify-center text-center sticky top-6">
+              <div className="space-y-6 w-full">
+                <h4 className="text-base font-extrabold text-slate-900 uppercase tracking-wider font-mono">Savings Estimator</h4>
+                
+                {/* SVG Gauge Visualizer */}
+                <div className="relative w-40 h-40 mx-auto flex items-center justify-center">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    {/* Circle Background */}
+                    <circle 
+                      cx="50" 
+                      cy="50" 
+                      r="42" 
+                      stroke="#f1f5f9" 
+                      strokeWidth="8" 
+                      fill="none" 
+                    />
+                    {/* Animated Progress Ring */}
+                    <motion.circle 
+                      cx="50" 
+                      cy="50" 
+                      r="42" 
+                      stroke="#10b981" 
+                      strokeWidth="8" 
+                      strokeLinecap="round"
+                      fill="none" 
+                      strokeDasharray={2 * Math.PI * 42}
+                      animate={{
+                        strokeDashoffset: (2 * Math.PI * 42) * (1 - (costTuningItems
+                          .filter(item => activeTuningIds.includes(item.id))
+                          .reduce((sum, item) => sum + item.percent, 0) / 100))
+                      }}
+                      transition={{ type: "spring", stiffness: 60, damping: 15 }}
+                    />
+                  </svg>
+                  {/* Gauge Center Text */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-2xl font-black text-slate-900 font-mono leading-none">
+                      {costTuningItems
+                        .filter(item => activeTuningIds.includes(item.id))
+                        .reduce((sum, item) => sum + item.percent, 0)}%
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">REDUCED</span>
+                  </div>
+                </div>
+
+                {/* Savings Dollar Counter */}
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono">ESTIMATED MONTHLY SAVINGS</span>
+                  <div className="text-3xl font-black text-[#2C5EAD] font-mono tracking-tight">
+                    ${displayedSavings.toLocaleString()}/mo
+                  </div>
+                  <p className="text-[10px] text-slate-500 leading-normal max-w-xs mx-auto">
+                    *Based on average client clusters sizing from 50 to 500 active compute nodes.
+                  </p>
+                </div>
+
+                {/* Checklist Summary */}
+                <div className="pt-5 border-t border-slate-100 space-y-2.5 text-left">
+                  <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 font-mono">
+                    <span>ACTIVE GUARDRAILS</span>
+                    <span>{activeTuningIds.length} / 7 ACTIVE</span>
+                  </div>
+                  <div className="space-y-1.5 max-h-32 overflow-y-auto scrollbar-thin pr-1">
+                    {costTuningItems.map(item => {
+                      const isActive = activeTuningIds.includes(item.id);
+                      if (!isActive) return null;
+                      return (
+                        <div key={item.id} className="flex items-center text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded">
+                          <Check className="w-3 h-3 text-emerald-600 mr-1.5 flex-shrink-0" />
+                          <span className="truncate">{item.title}</span>
+                        </div>
+                      );
+                    })}
+                    {activeTuningIds.length === 0 && (
+                      <div className="text-[10px] text-slate-400 text-center py-2 font-mono">
+                        No active cost-tuning policies
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <Link 
+                  href="/contact"
+                  className="w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-[#2C5EAD] to-[#1591DC] hover:opacity-95 transition-all text-xs shadow-md shadow-[#2C5EAD]/15"
+                >
+                  Schedule A Cost Audit
+                  <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                </Link>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
@@ -620,7 +1348,7 @@ export default function CloudSrePage() {
       </section>
 
       {/* 7. FAQs */}
-      <section className="relative bg-[#ffffff] py-24 overflow-hidden text-slate-950 border-b border-slate-100">
+      <section className="relative bg-gradient-to-b from-[#d6e5fb] via-[#e6effb] to-[#edf4fc] py-24 overflow-hidden text-slate-950 border-b border-slate-100">
         {/* Header Section */}
         <div className="text-center max-w-4xl mx-auto mb-16 relative">
           {/* Watermark text behind */}
@@ -774,7 +1502,7 @@ export default function CloudSrePage() {
       </section>
 
       {/* 8. CALL TO ACTION */}
-      <section className="py-24 bg-gradient-to-b from-[#ffffff] via-[#6c97db] to-[#1d3f75] text-white overflow-hidden relative">
+      <section className="py-24 bg-gradient-to-b from-[#edf4fc] via-[#6c97db] to-[#1d3f75] text-white overflow-hidden relative">
         <div className="absolute inset-0 grid-pattern opacity-10 pointer-events-none" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px] pointer-events-none" />
         

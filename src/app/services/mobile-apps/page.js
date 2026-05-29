@@ -363,7 +363,7 @@ export default function MobileAppsPage() {
       </section>
 
       {/* 4. DEVELOPMENT PROCESS */}
-      <section id="process" className="relative bg-gradient-to-b from-[#334e8f] via-[#5978be] to-[#8da8df] py-20 border-b border-white/5 overflow-hidden">
+      <section id="process" className="relative bg-gradient-to-b from-[#334e8f] via-[#5978be] to-[#cddbf7] py-20 border-b border-white/5 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-3 text-white">
             <h2 className="text-[10px] font-black tracking-widest text-[#4BB8FA] uppercase font-mono">workflow::lifecycle</h2>
@@ -528,7 +528,7 @@ export default function MobileAppsPage() {
       </section>
 
       {/* 8. FAQs */}
-      <section className="relative bg-[#ffffff] py-24 overflow-hidden text-slate-950 border-b border-slate-100">
+      <section className="relative bg-gradient-to-b from-[#d6e5fb] via-[#e6effb] to-[#edf4fc] py-24 overflow-hidden text-slate-950 border-b border-slate-100">
         {/* Header Section from the image */}
         <div className="text-center max-w-4xl mx-auto mb-16 relative">
           {/* Watermark text behind */}
@@ -682,7 +682,7 @@ export default function MobileAppsPage() {
       </section>
 
       {/* 9. CALL TO ACTION */}
-      <section className="py-24 bg-gradient-to-b from-[#ffffff] via-[#6c97db] to-[#1d3f75] text-white overflow-hidden relative">
+      <section className="py-24 bg-gradient-to-b from-[#edf4fc] via-[#6c97db] to-[#1d3f75] text-white overflow-hidden relative">
         <div className="absolute inset-0 grid-pattern opacity-10 pointer-events-none" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
         

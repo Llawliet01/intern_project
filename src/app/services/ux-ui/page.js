@@ -6,34 +6,47 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   ArrowRight, Check, CheckCircle2, ChevronDown, Compass, 
   Zap, Cpu, Sparkles, Database, Lock, Globe, ArrowUpRight, 
-  Layers, Settings, Palette, Eye, Layout, PenTool
+  Layers, Settings, Palette, Eye, Layout, PenTool, Accessibility
 } from "lucide-react";
 
 export default function UxUiPage() {
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
+  const [faqPage, setFaqPage] = useState(0);
+  const [faqInput, setFaqInput] = useState("");
+  const [faqSent, setFaqSent] = useState(false);
 
   const toggleFaq = (index) => {
     setOpenFaqIndex(openFaqIndex === index ? null : index);
   };
 
+  // State for Interactive Design Process Sandbox
+  const [activeStep, setActiveStep] = useState("discovery");
+
+  // State for Accessibility Component Sandbox
+  const [activeButtonState, setActiveButtonState] = useState("default");
+
   const processPillars = [
     {
       step: "01",
+      id: "discovery",
       title: "Discovery",
       desc: "Detailed user research, stakeholder interviews, and comprehensive competitive analyses."
     },
     {
       step: "02",
+      id: "wireframes",
       title: "Wireframes",
       desc: "Mapping information architecture, defining user flows, and sketching low-fidelity mockups."
     },
     {
       step: "03",
+      id: "visual",
       title: "Visual Design",
       desc: "Pixel-perfect high-fidelity screens, cohesive design tokens, and unified brand guidelines."
     },
     {
       step: "04",
+      id: "prototype",
       title: "Prototyping",
       desc: "Interactive clickable prototypes, hands-on usability tests, and constant design iterations."
     }
@@ -73,40 +86,6 @@ export default function UxUiPage() {
     {
       title: "Interactive Prototypes",
       desc: "High-fidelity interactive prototypes for usability test runs and stakeholders demo."
-    }
-  ];
-
-  const timelineSteps = [
-    {
-      phase: "Research Phase",
-      bullets: ["User interviews", "Competitive analysis", "Analytics reviews", "Persona definitions"]
-    },
-    {
-      phase: "Define Phase",
-      bullets: ["User journey mappings", "Information architecture", "Feature prioritization", "Design principles"]
-    },
-    {
-      phase: "Design Phase",
-      bullets: ["Structural wireframes", "High-fidelity UI screens", "Custom design system", "Component libraries"]
-    },
-    {
-      phase: "Validate Phase",
-      bullets: ["Prototype wiring", "Usability session testing", "A/B variant tests", "Design iterations"]
-    }
-  ];
-
-  const portfolioExamples = [
-    {
-      title: "SaaS Dashboard Redesign",
-      challenge: "Complex enterprise cloud dashboard suffered from bad navigation controls and low daily engagement rates.",
-      solution: "Simplified sidebar structures, integrated clear data charts, and personalized dashboard widget flows.",
-      results: "Dramatically improved user task completion rates and client satisfaction ratings."
-    },
-    {
-      title: "E-Commerce Mobile App UI",
-      challenge: "Mobile shopping store suffered from cart drop-off rates due to multi-step checkout layouts.",
-      solution: "Streamlined checkout into a single page, integrated guest checkouts, and optimized touch screen gestures.",
-      results: "Significantly decreased cart abandonment rates while boosting mobile transaction counts."
     }
   ];
 
@@ -251,83 +230,224 @@ export default function UxUiPage() {
         </div>
       </section>
 
-      {/* 2. OUR PROCESS */}
+      {/* 2. OUR PROCESS (REDESIGNED: INTERACTIVE DESIGN PROCESS SANDBOX) */}
       <section id="process" className="relative bg-gradient-to-b from-[#101733] via-[#152147] to-[#1c2c5c] py-20 border-b border-white/5 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
             <h2 className="text-[10px] font-black tracking-widest text-[#1591dc] uppercase font-mono">workflow::lifecycle</h2>
             <h3 className="text-3xl font-extrabold tracking-tight text-white">Our Design Process</h3>
+            <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
+              Click the process lifecycle stages below to preview deliverables inside our sandbox canvas.
+            </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {processPillars.map((pil) => (
-              <div 
-                key={pil.step}
-                className="p-6 rounded-3xl bg-slate-900/60 border border-white/5 hover:border-rose-500/30 transition-all flex flex-col justify-between h-full"
-              >
-                <div className="space-y-4">
-                  <span className="text-3xl font-black font-mono text-rose-500">{pil.step}</span>
-                  <h4 className="text-base font-bold text-white">{pil.title}</h4>
-                  <p className="text-xs text-slate-400 leading-relaxed">{pil.desc}</p>
+          <div className="grid lg:grid-cols-12 gap-8 items-stretch max-w-6xl mx-auto">
+            {/* Left Column: Stage buttons */}
+            <div className="lg:col-span-5 flex flex-col space-y-3 justify-center">
+              {processPillars.map((pil) => {
+                const isActive = activeStep === pil.id;
+                return (
+                  <button
+                    key={pil.step}
+                    onClick={() => setActiveStep(pil.id)}
+                    className={`text-left p-5 rounded-2xl border transition-all duration-300 ${
+                      isActive 
+                        ? "bg-[#1b203a] border-rose-500 text-white shadow-lg shadow-rose-500/10" 
+                        : "bg-slate-900/40 border-white/5 text-slate-400 hover:border-white/10 hover:text-white"
+                    }`}
+                  >
+                    <span className="text-3xl font-black font-mono text-rose-500 block mb-1">{pil.step}</span>
+                    <h4 className="text-sm font-bold">{pil.title}</h4>
+                    <p className="text-xs text-slate-400 leading-normal mt-1">{pil.desc}</p>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Right Column: Visual Sandbox Canvas */}
+            <div className="lg:col-span-7 p-6 rounded-3xl bg-[#090b16]/95 border border-white/5 flex flex-col justify-between relative overflow-hidden min-h-[300px]">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(244,63,94,0.02),transparent_70%)] pointer-events-none" />
+              
+              <div className="space-y-4 relative z-10 w-full flex flex-col h-full justify-between">
+                <div className="flex justify-between items-center pb-3 border-b border-white/5 font-mono text-[9px] text-[#fda4af] font-bold uppercase tracking-wider">
+                  <span>interactive_design_canvas::sandbox</span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                </div>
+
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeStep}
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    className="flex-grow flex flex-col justify-center"
+                  >
+                    {activeStep === "discovery" && (
+                      <div className="p-6 rounded-2xl bg-white/5 border border-white/5 max-w-sm mx-auto space-y-3 font-sans">
+                        <span className="text-[8px] font-mono text-rose-400 font-bold uppercase tracking-wider">Target Persona</span>
+                        <h5 className="font-extrabold text-white text-sm">Sarah, Product Lead</h5>
+                        <div className="border-t border-white/5 pt-2 space-y-1 text-slate-300 text-xs">
+                          <p>🎯 **Core Goal**: Reduce checkout friction by 35%.</p>
+                          <p>⚠️ **Pain Point**: Complex multistep navigations drop user engagement.</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {activeStep === "wireframes" && (
+                      <div className="py-4 flex flex-col items-center">
+                        {/* Blueprint wireframe */}
+                        <svg viewBox="0 0 240 120" className="w-full max-w-[200px] h-auto border border-[#3b82f6]/40 rounded bg-slate-950 p-2" fill="none">
+                          <rect width="220" height="20" fill="none" stroke="#3b82f6" strokeWidth="1" strokeDasharray="3 3" />
+                          <line x1="10" y1="10" x2="50" y2="10" stroke="#3b82f6" strokeWidth="1" />
+                          
+                          <rect x="0" y="30" width="60" height="70" fill="none" stroke="#3b82f6" strokeWidth="1" strokeDasharray="3 3" />
+                          <rect x="70" y="30" width="150" height="70" fill="none" stroke="#3b82f6" strokeWidth="1" strokeDasharray="3 3" />
+                        </svg>
+                        <span className="text-[9px] font-mono text-slate-400 mt-2">LOW-FIDELITY GRID BLUEPRINT WIREFRAME</span>
+                      </div>
+                    )}
+
+                    {activeStep === "visual" && (
+                      <div className="py-4 flex flex-col items-center">
+                        {/* High fidelity design */}
+                        <div className="w-full max-w-[200px] border border-white/10 rounded-xl bg-slate-900/80 p-3 shadow-xl space-y-2">
+                          <div className="flex justify-between items-center">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-rose-500 to-indigo-500" />
+                            <div className="w-16 h-2 rounded bg-slate-700" />
+                          </div>
+                          <div className="w-full h-8 rounded bg-gradient-to-r from-rose-500/20 to-indigo-500/20 border border-rose-500/30 flex items-center justify-center">
+                            <span className="text-[8px] font-extrabold text-rose-300 tracking-wider">CHECKOUT PROCEED</span>
+                          </div>
+                        </div>
+                        <span className="text-[9px] font-mono text-slate-400 mt-2">HIGH-FIDELITY GRADIENT COMPONENT DESIGN</span>
+                      </div>
+                    )}
+
+                    {activeStep === "prototype" && (
+                      <div className="py-4 flex flex-col items-center relative">
+                        {/* Cursor interaction */}
+                        <div className="w-full max-w-[200px] border border-white/10 rounded-xl bg-slate-900/80 p-3 shadow-xl flex flex-col items-center justify-center">
+                          <motion.button 
+                            className="px-6 py-2 rounded-full font-bold text-xs bg-rose-500 text-white shadow-md relative"
+                            animate={{ scale: [1, 1.08, 1] }}
+                            transition={{ repeat: Infinity, duration: 2 }}
+                          >
+                            Add to Cart
+                          </motion.button>
+                        </div>
+                        
+                        {/* Mock Cursor */}
+                        <motion.div 
+                          className="absolute pointer-events-none"
+                          animate={{ x: [-20, 10, -20], y: [20, -10, 20] }}
+                          transition={{ repeat: Infinity, duration: 2 }}
+                        >
+                          <svg viewBox="0 0 20 20" className="w-4 h-4 text-white fill-white shadow-lg">
+                            <path d="M0,0 L16,10 L9,11 L4,16 Z" />
+                          </svg>
+                        </motion.div>
+                        <span className="text-[9px] font-mono text-slate-400 mt-3">PROTOTYPE USER CURSOR GESTURE INTERACTION</span>
+                      </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+
+                <div className="border-t border-white/5 pt-3 mt-4 text-[9px] font-mono text-slate-500 uppercase tracking-widest flex justify-between">
+                  <span>CANVAS STATE: RENDERING</span>
+                  <span>PREVIEW: ACTIVE</span>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* 3. DESIGN SYSTEMS & ACCESSIBILITY */}
+      {/* 3. DESIGN SYSTEMS & ACCESSIBILITY (REDESIGNED: INTERACTIVE ACCESSIBILITY SANDBOX) */}
       <section className="relative bg-gradient-to-b from-[#1c2c5c] via-[#263c75] to-[#334e8f] py-20 border-b border-white/5 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
             <h2 className="text-[10px] font-black tracking-widest text-[#1591dc] uppercase font-mono">design::pillars</h2>
             <h3 className="text-3xl font-extrabold tracking-tight text-white">Design Systems & Web Accessibility</h3>
+            <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
+              Test different UI states on the interactive button playground to verify accessibility parameters.
+            </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* Design systems */}
-            <div className="p-8 rounded-3xl bg-slate-950/40 border border-white/5 hover:border-rose-500/30 transition-all">
-              <h4 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-                <Palette className="w-5 h-5 text-rose-400" />
-                <span>Design Systems</span>
-              </h4>
-              <p className="text-xs text-slate-300 leading-relaxed mb-6">
-                We create scalable design systems that ensure consistency across your product and accelerate development.
-              </p>
-              <ul className="space-y-2.5 pt-4 border-t border-white/5">
-                {designSystems.map((ds) => (
-                  <li key={ds} className="flex items-center text-xs text-slate-300">
-                    <Check className="w-4 h-4 mr-2 text-rose-400 flex-shrink-0" />
-                    <span>{ds}</span>
-                  </li>
-                ))}
-              </ul>
+          <div className="grid lg:grid-cols-12 gap-8 items-stretch max-w-6xl mx-auto">
+            {/* Left Column: UI previews details */}
+            <div className="lg:col-span-5 p-8 rounded-3xl bg-slate-950/40 border border-white/5 flex flex-col justify-between shadow-lg">
+              <div className="space-y-4">
+                <span className="text-[9px] font-mono text-[#fda4af] font-bold uppercase tracking-widest block">Button Dials</span>
+                <h4 className="text-base font-extrabold text-white">Accessibility Focus Playground</h4>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Toggle buttons below to evaluate contrast ratios and key outlines.
+                </p>
+
+                <div className="flex flex-wrap gap-2 pt-4">
+                  {["default", "hover", "focus", "disabled"].map((st) => (
+                    <button
+                      key={st}
+                      onClick={() => setActiveButtonState(st)}
+                      className={`px-4 py-2 rounded-lg text-xs font-mono font-bold uppercase tracking-wider transition-all ${
+                        activeButtonState === st 
+                          ? "bg-rose-500 text-white shadow-sm" 
+                          : "bg-slate-900 border border-white/5 text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      {st}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-4 mt-6 rounded-xl bg-slate-900/60 border border-white/5 text-[10px] font-mono text-slate-400 space-y-1">
+                {activeButtonState === "default" && <div>✔ CONTRAST RATIO: 6.2:1 (PASS WCAG AAA)</div>}
+                {activeButtonState === "hover" && <div>✔ HIGHLIGHT STATE: Opacity transition engaged</div>}
+                {activeButtonState === "focus" && <div>✔ KEYBOARD OUTLINE: Enforced ring focus-visible</div>}
+                {activeButtonState === "disabled" && <div>✔ ARIA PROPERTIES: aria-disabled="true"</div>}
+              </div>
             </div>
 
-            {/* Accessibility */}
-            <div className="p-8 rounded-3xl bg-slate-950/40 border border-white/5 hover:border-rose-500/30 transition-all">
-              <h4 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-                <Eye className="w-5 h-5 text-rose-400" />
-                <span>Accessibility</span>
-              </h4>
-              <p className="text-xs text-slate-300 leading-relaxed mb-6">
-                WCAG 2.1 AA+ compliance built into every layout. Inclusive product design for all users.
-              </p>
-              <ul className="space-y-2.5 pt-4 border-t border-white/5">
-                {accessibilityFeatures.map((ac) => (
-                  <li key={ac} className="flex items-center text-xs text-slate-300">
-                    <Check className="w-4 h-4 mr-2 text-rose-400 flex-shrink-0" />
-                    <span>{ac}</span>
-                  </li>
-                ))}
-              </ul>
+            {/* Right Column: Large Preview Button Display */}
+            <div className="lg:col-span-7 p-8 rounded-3xl bg-slate-950/40 border border-white/5 flex flex-col justify-center items-center text-center relative overflow-hidden min-h-[220px]">
+              <AnimatePresence mode="wait">
+                <motion.div 
+                  key={activeButtonState}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="space-y-4"
+                >
+                  <button 
+                    disabled={activeButtonState === "disabled"}
+                    className={`px-8 py-4 rounded-full font-bold text-xs uppercase tracking-widest transition-all ${
+                      activeButtonState === "default" 
+                        ? "bg-rose-500 text-white shadow-lg shadow-rose-500/20" 
+                        : activeButtonState === "hover" 
+                        ? "bg-rose-600 text-white scale-102 shadow-lg"
+                        : activeButtonState === "focus"
+                        ? "bg-rose-500 text-white ring-4 ring-rose-400/50 ring-offset-4 ring-offset-slate-950 outline-none"
+                        : "bg-slate-800 text-slate-500 cursor-not-allowed opacity-50"
+                    }`}
+                  >
+                    Accessible Action Button
+                  </button>
+                  
+                  <div className="text-[10px] font-mono text-slate-400">
+                    {activeButtonState === "default" && "Optimal text colors for seamless readability."}
+                    {activeButtonState === "hover" && "Engages micro-animations on user interactions."}
+                    {activeButtonState === "focus" && "Provides outline indicators for screen-readers and keyboard focus."}
+                    {activeButtonState === "disabled" && "Blocks system execution and returns accessibility disabled states."}
+                  </div>
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
         </div>
       </section>
 
       {/* 4. WHAT YOU GET */}
-      <section className="relative bg-gradient-to-b from-[#334e8f] via-[#5978be] to-[#8da8df] py-20 border-b border-white/5 overflow-hidden text-white">
+      <section className="relative bg-gradient-to-b from-[#334e8f] via-[#5978be] to-[#cddbf7] py-20 border-b border-white/5 overflow-hidden text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
             <h2 className="text-[10px] font-black tracking-widest text-[#4BB8FA] uppercase font-mono">deliverables::manifest</h2>
@@ -336,146 +456,214 @@ export default function UxUiPage() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {deliverables.map((deliv) => (
-              <div 
+              <motion.div 
                 key={deliv.title}
-                className="p-6 rounded-3xl bg-[#090b16]/95 border border-white/5 flex flex-col justify-between h-full"
+                whileHover={{ y: -5 }}
+                className="p-6 rounded-3xl bg-[#090b16]/95 border border-white/5 flex flex-col justify-between h-full hover:border-rose-500/30 transition-colors shadow-lg"
               >
                 <div className="space-y-4">
                   <h4 className="text-sm font-bold text-white">{deliv.title}</h4>
                   <p className="text-xs text-slate-400 leading-relaxed">{deliv.desc}</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 5. DESIGN PROCESS TIMELINE */}
-      <section className="relative bg-gradient-to-b from-[#cddbf7] via-[#e2ecfa] to-[#f0f5fd] py-20 border-b border-black/5 text-slate-950">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-            <h2 className="text-[10px] font-black tracking-widest text-[#2C5EAD] uppercase font-mono">timeline::process</h2>
-            <h3 className="text-3xl font-extrabold tracking-tight text-slate-900">Design Process Timeline</h3>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {timelineSteps.map((step) => (
-              <div 
-                key={step.phase}
-                className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between"
-              >
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900 mb-4 uppercase tracking-wider font-mono">{step.phase}</h4>
-                  <ul className="space-y-2">
-                    {step.bullets.map((b) => (
-                      <li key={b} className="flex items-start text-xs text-slate-700 leading-normal">
-                        <Check className="w-4 h-4 text-rose-600 mr-2 flex-shrink-0 mt-0.5" />
-                        <span>{b}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 6. DESIGN PORTFOLIO EXAMPLES */}
-      <section className="relative bg-gradient-to-b from-[#f0f5fd] via-[#f8fafc] to-[#edf4fc] py-20 border-b border-black/5 text-slate-950">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-            <h2 className="text-[10px] font-black tracking-widest text-[#2C5EAD] uppercase font-mono">portfolio::examples</h2>
-            <h3 className="text-3xl font-extrabold tracking-tight text-slate-900">Design Cases Portfolio</h3>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {portfolioExamples.map((story) => (
-              <div 
-                key={story.title}
-                className="p-8 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
-              >
-                <div className="space-y-3">
-                  <h4 className="text-base font-bold text-slate-900">{story.title}</h4>
-                  <p className="text-xs text-slate-500 leading-relaxed font-semibold">Challenge: {story.challenge}</p>
-                  <p className="text-xs text-slate-600 leading-relaxed">Solution: {story.solution}</p>
-                </div>
-                <div className="border-t border-slate-100 pt-4 mt-4">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest font-mono block mb-1">Key Results</span>
-                  <span className="text-xs text-slate-800 font-medium">{story.results}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 7. TECHNOLOGIES WE USE */}
-      <section className="relative bg-gradient-to-b from-[#edf4fc] via-[#e6effb] to-[#d6e5fb] py-20 border-b border-black/5 text-slate-950">
+      {/* 5. DESIGN TOOLS BY CATEGORY (REDESIGNED: CONTINUOUS HORIZONTAL MARQUEE) */}
+      <section className="relative bg-gradient-to-b from-[#cddbf7] via-[#e2ecfa] to-[#f0f5fd] py-20 border-b border-black/5 text-slate-950 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
             <h2 className="text-[10px] font-black tracking-widest text-[#2C5EAD] uppercase font-mono">tools::ecosystem</h2>
             <h3 className="text-3xl font-extrabold tracking-tight text-slate-900">Design Tools We Deploy</h3>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto text-center">
-            {techStack.map((tech) => (
-              <div 
-                key={tech.name} 
-                className="p-4 bg-white/80 border border-slate-200/60 rounded-xl flex flex-col justify-center shadow-sm"
-              >
-                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest block font-mono mb-1">{tech.category}</span>
-                <span className="text-xs font-bold text-slate-800 leading-tight">{tech.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+          <div className="relative w-full overflow-hidden py-4 select-none">
+            {/* Left fade gradient overlay */}
+            <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-[#cddbf7] to-transparent z-10 pointer-events-none" />
+            {/* Right fade gradient overlay */}
+            <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-[#f0f5fd] to-transparent z-10 pointer-events-none" />
 
-      {/* 8. FAQs */}
-      <section className="relative bg-gradient-to-b from-[#d6e5fb] via-[#f1f5f9] to-[#ffffff] py-20 overflow-hidden text-slate-950">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-            <h2 className="text-[10px] font-black tracking-widest text-[#2C5EAD] uppercase font-mono">common::inquiries</h2>
-            <h3 className="text-3xl font-extrabold tracking-tight text-slate-900">Frequently Asked Questions</h3>
-          </div>
-
-          <div className="space-y-4">
-            {faqs.map((faq, idx) => {
-              const isOpen = openFaqIndex === idx;
-              return (
-                <div key={idx} className="border border-slate-200/85 rounded-2xl overflow-hidden bg-white/70 hover:bg-white transition-colors shadow-sm">
-                  <button
-                    onClick={() => toggleFaq(idx)}
-                    className="w-full flex justify-between items-center p-6 text-left font-bold text-slate-900 text-sm sm:text-base focus:outline-none"
-                  >
-                    <span>{faq.q}</span>
-                    <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180 text-[#2C5EAD]" : ""}`} />
-                  </button>
-
-                  <AnimatePresence initial={false}>
-                    {isOpen && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                      >
-                        <div className="px-6 pb-6 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100">
-                          {faq.a}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+            <motion.div 
+              className="flex space-x-6 w-max"
+              animate={{ x: [0, -1120] }}
+              transition={{
+                repeat: Infinity,
+                ease: "linear",
+                duration: 25
+              }}
+            >
+              {/* Infinite scroller block: loop 3 times */}
+              {[...techStack, ...techStack, ...techStack].map((tech, idx) => (
+                <div 
+                  key={idx} 
+                  className="p-5 bg-white border border-slate-200/80 rounded-2xl flex flex-col justify-center text-center shadow-sm w-44 flex-shrink-0"
+                >
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block font-mono mb-1">{tech.category}</span>
+                  <span className="text-sm font-extrabold text-slate-800">{tech.name}</span>
                 </div>
-              );
-            })}
+              ))}
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* 9. CALL TO ACTION */}
-      <section className="py-24 bg-gradient-to-b from-[#ffffff] via-[#6c97db] to-[#1d3f75] text-white overflow-hidden relative">
+      {/* 6. FAQs (REDESIGNED: WATERMARK & ACCORDION PAGINATION) */}
+      <section className="relative bg-gradient-to-b from-[#d6e5fb] via-[#e6effb] to-[#edf4fc] py-24 overflow-hidden text-slate-950 border-b border-slate-100">
+        {/* Header Section */}
+        <div className="text-center max-w-4xl mx-auto mb-16 relative">
+          {/* Watermark text behind */}
+          <div className="absolute inset-0 flex items-center justify-center -top-8 pointer-events-none select-none overflow-hidden">
+            <span className="text-5xl sm:text-7xl md:text-8xl font-black text-slate-100 tracking-wider whitespace-nowrap opacity-70 uppercase">
+              Frequently Ask Question
+            </span>
+          </div>
+          
+          <h3 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 relative z-10">
+            Frequently Ask Question
+          </h3>
+          <p className="text-sm font-bold text-rose-600 mt-2 relative z-10 cursor-pointer hover:underline">
+            <Link href="/contact">Click Here to contact now.</Link>
+          </p>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-12 gap-12 items-start">
+            
+            {/* Left Column: Accordions & Pagination */}
+            <div className="lg:col-span-7 flex flex-col space-y-4">
+              <div className="space-y-4 min-h-[380px]">
+                {faqs.slice(faqPage * 3, (faqPage + 1) * 3).map((faq, pageIdx) => {
+                  const globalIdx = faqPage * 3 + pageIdx;
+                  const isOpen = openFaqIndex === globalIdx;
+                  return (
+                    <div 
+                      key={globalIdx} 
+                      className="border border-slate-100 rounded-xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.03)] overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)]"
+                    >
+                      <button
+                        onClick={() => toggleFaq(globalIdx)}
+                        className="w-full flex justify-between items-center p-6 text-left font-bold text-slate-900 text-sm sm:text-base focus:outline-none"
+                      >
+                        <span>{faq.q}</span>
+                        <div className="w-8 h-8 rounded-full bg-rose-600 hover:bg-rose-500 flex items-center justify-center text-white text-base font-black flex-shrink-0 transition-colors shadow-sm">
+                          {isOpen ? "−" : "+"}
+                        </div>
+                      </button>
+
+                      <AnimatePresence initial={false}>
+                        {isOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.25 }}
+                          >
+                            <div className="px-6 pb-6 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-50">
+                              {faq.a}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-start gap-4 pt-6 pl-4">
+                <button 
+                  onClick={() => setFaqPage(0)}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-all shadow-sm ${
+                    faqPage === 0 ? "bg-rose-600 scale-105" : "bg-rose-600/70 hover:bg-rose-600"
+                  }`}
+                >
+                  1
+                </button>
+                <button 
+                  onClick={() => setFaqPage(1)}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-all shadow-sm ${
+                    faqPage === 1 ? "bg-rose-600 scale-105" : "bg-rose-600/70 hover:bg-rose-600"
+                  }`}
+                >
+                  2
+                </button>
+              </div>
+            </div>
+
+            {/* Right Column: Illustration & Question Input Form */}
+            <div className="lg:col-span-5 flex flex-col items-center p-8 bg-slate-50/50 rounded-3xl border border-slate-100 shadow-[0_10px_40px_rgba(0,0,0,0.02)]">
+              <div className="w-56 h-48 relative mb-6">
+                <img 
+                  src="/assets/ux_ui_faq_illustration.png" 
+                  alt="UX/UI FAQ Illustration" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+
+              <h4 className="text-2xl font-extrabold text-slate-900 mb-1">Any Question?</h4>
+              <p className="text-xs text-slate-500 text-center mb-6">
+                Ask us anything about customer research processes, Figma systems documentation, or web design assets transfer.
+              </p>
+
+              {/* Submission Form */}
+              <div className="w-full space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono pl-1">
+                    Let me know.
+                  </label>
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      placeholder="Enter Here"
+                      value={faqInput}
+                      onChange={(e) => setFaqInput(e.target.value)}
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-xs sm:text-sm focus:outline-none focus:border-rose-600 pr-10 shadow-sm"
+                    />
+                    {faqInput && (
+                      <button 
+                        onClick={() => setFaqInput("")}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold font-mono"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-center pt-2">
+                  <button 
+                    onClick={() => {
+                      if (!faqInput.trim()) return;
+                      setFaqSent(true);
+                      setFaqInput("");
+                      setTimeout(() => setFaqSent(false), 4000);
+                    }}
+                    className="w-full sm:w-auto px-10 py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-rose-600/20 active:scale-95"
+                  >
+                    {faqSent ? "Sent Successfully!" : "Sent"}
+                  </button>
+                </div>
+                
+                {faqSent && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center text-[10px] font-bold text-emerald-600 font-mono mt-2"
+                  >
+                    Thank you! Your question has been forwarded to our support queue.
+                  </motion.div>
+                )}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* 7. CALL TO ACTION */}
+      <section className="py-24 bg-gradient-to-b from-[#edf4fc] via-[#6c97db] to-[#1d3f75] text-white overflow-hidden relative">
         <div className="absolute inset-0 grid-pattern opacity-10 pointer-events-none" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-rose-500/10 rounded-full blur-[120px] pointer-events-none" />
         

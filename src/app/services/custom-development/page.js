@@ -134,6 +134,9 @@ export default function CustomDevelopmentPage() {
   // States
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
+  const [faqPage, setFaqPage] = useState(0);
+  const [faqInput, setFaqInput] = useState("");
+  const [faqSent, setFaqSent] = useState(false);
 
   const toggleFaq = (index) => {
     setOpenFaqIndex(openFaqIndex === index ? null : index);
@@ -1126,48 +1129,155 @@ export default function CustomDevelopmentPage() {
       </section>
 
       {/* 8. FAQs: Connected transition `#edf4fc` -> `#e6effb` -> `#d6e5fb` */}
-      <section className="relative bg-gradient-to-b from-[#edf4fc] via-[#e6effb] to-[#d6e5fb] py-20 overflow-hidden text-slate-950">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-            <h2 className="text-[10px] font-black tracking-widest text-[#2C5EAD] uppercase font-mono">common::inquiries</h2>
-            <h3 className="text-3xl font-extrabold tracking-tight text-slate-900">Frequently Asked Questions</h3>
-            <p className="text-xs text-slate-700 max-w-md mx-auto leading-relaxed">Answers to common project roadmaps and workflow structures.</p>
+      <section className="relative bg-gradient-to-b from-[#edf4fc] via-[#e6effb] to-[#d6e5fb] py-24 overflow-hidden text-slate-950 border-b border-slate-100">
+        {/* Header Section */}
+        <div className="text-center max-w-4xl mx-auto mb-16 relative">
+          {/* Watermark text behind */}
+          <div className="absolute inset-0 flex items-center justify-center -top-8 pointer-events-none select-none overflow-hidden">
+            <span className="text-5xl sm:text-7xl md:text-8xl font-black text-slate-100 tracking-wider whitespace-nowrap opacity-70 uppercase">
+              Frequently Ask Question
+            </span>
           </div>
+          
+          <h3 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 relative z-10">
+            Frequently Ask Question
+          </h3>
+          <p className="text-sm font-bold text-cyan-600 mt-2 relative z-10 cursor-pointer hover:underline">
+            <Link href="/contact">Click Here to contact now.</Link>
+          </p>
+        </div>
 
-          <div className="space-y-4">
-            {faqs.map((faq, idx) => {
-              const isOpen = openFaqIndex === idx;
-              return (
-                <div 
-                  key={idx}
-                  className="border border-slate-200/85 rounded-2xl overflow-hidden bg-white/70 hover:bg-white transition-colors shadow-sm"
-                >
-                  <button
-                    onClick={() => toggleFaq(idx)}
-                    className="w-full flex justify-between items-center p-6 text-left font-bold text-slate-900 text-sm sm:text-base focus:outline-none"
-                  >
-                    <span>{faq.q}</span>
-                    <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180 text-[#2C5EAD]" : ""}`} />
-                  </button>
-
-                  <AnimatePresence initial={false}>
-                    {isOpen && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-12 gap-12 items-start">
+            
+            {/* Left Column: Accordions & Pagination */}
+            <div className="lg:col-span-7 flex flex-col space-y-4">
+              <div className="space-y-4 min-h-[380px]">
+                {faqs.slice(faqPage * 3, (faqPage + 1) * 3).map((faq, pageIdx) => {
+                  const globalIdx = faqPage * 3 + pageIdx;
+                  const isOpen = openFaqIndex === globalIdx;
+                  return (
+                    <div 
+                      key={globalIdx} 
+                      className="border border-slate-100 rounded-xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.03)] overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)]"
+                    >
+                      <button
+                        onClick={() => toggleFaq(globalIdx)}
+                        className="w-full flex justify-between items-center p-6 text-left font-bold text-slate-900 text-sm sm:text-base focus:outline-none"
                       >
-                        <div className="px-6 pb-6 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100">
-                          {faq.a}
+                        <span>{faq.q}</span>
+                        <div className="w-8 h-8 rounded-full bg-[#1591dc] hover:bg-[#4bb8fa] flex items-center justify-center text-white text-base font-black flex-shrink-0 transition-colors shadow-sm">
+                          {isOpen ? "−" : "+"}
                         </div>
-                      </motion.div>
+                      </button>
+
+                      <AnimatePresence initial={false}>
+                        {isOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.25 }}
+                          >
+                            <div className="px-6 pb-6 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-50">
+                              {faq.a}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-start gap-4 pt-6 pl-4">
+                <button 
+                  onClick={() => setFaqPage(0)}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-all shadow-sm ${
+                    faqPage === 0 ? "bg-[#1591dc] scale-105" : "bg-[#1591dc]/70 hover:bg-[#1591dc]"
+                  }`}
+                >
+                  1
+                </button>
+                <button 
+                  onClick={() => setFaqPage(1)}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-all shadow-sm ${
+                    faqPage === 1 ? "bg-[#1591dc] scale-105" : "bg-[#1591dc]/70 hover:bg-[#1591dc]"
+                  }`}
+                >
+                  2
+                </button>
+              </div>
+            </div>
+
+            {/* Right Column: Illustration & Question Input Form */}
+            <div className="lg:col-span-5 flex flex-col items-center p-8 bg-slate-50/50 rounded-3xl border border-slate-100 shadow-[0_10px_40px_rgba(0,0,0,0.02)]">
+              {/* Question mark illustration */}
+              <div className="w-56 h-48 relative mb-6">
+                <img 
+                  src="/assets/faq_illustration.png" 
+                  alt="FAQ Illustration" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+
+              <h4 className="text-2xl font-extrabold text-slate-900 mb-1">Any Question?</h4>
+              <p className="text-xs text-slate-500 text-center mb-6">
+                Ask us anything about custom design boilerplates, timelines, support tiers, and integration patterns.
+              </p>
+
+              {/* Submission Form */}
+              <div className="w-full space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono pl-1">
+                    Let me know.
+                  </label>
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      placeholder="Enter Here"
+                      value={faqInput}
+                      onChange={(e) => setFaqInput(e.target.value)}
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-xs sm:text-sm focus:outline-none focus:border-[#1591dc] pr-10 shadow-sm"
+                    />
+                    {faqInput && (
+                      <button 
+                        onClick={() => setFaqInput("")}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold font-mono"
+                      >
+                        ×
+                      </button>
                     )}
-                  </AnimatePresence>
+                  </div>
                 </div>
-              );
-            })}
+
+                <div className="flex justify-center pt-2">
+                  <button 
+                    onClick={() => {
+                      if (!faqInput.trim()) return;
+                      setFaqSent(true);
+                      setFaqInput("");
+                      setTimeout(() => setFaqSent(false), 4000);
+                    }}
+                    className="w-full sm:w-auto px-10 py-3 bg-[#1591dc] hover:bg-[#4bb8fa] text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-[#1591dc]/20 active:scale-95"
+                  >
+                    {faqSent ? "Sent Successfully!" : "Sent"}
+                  </button>
+                </div>
+                
+                {faqSent && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center text-[10px] font-bold text-emerald-600 font-mono mt-2"
+                  >
+                    Thank you! Your question has been forwarded to our support queue.
+                  </motion.div>
+                )}
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
