@@ -48,59 +48,59 @@ export default function PricingPage() {
   ];
 
   return (
-    <div className="relative py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-16">
+    <div className="relative py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-16 text-slate-800">
       
       {/* Background radial glow */}
-      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-blue-400/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
 
       <div className="text-center max-w-3xl mx-auto space-y-4">
-        <span className="text-xs font-black tracking-widest text-primary uppercase bg-[#1e2038]/30 px-3 py-1.5 rounded-full border border-[#1e2038]">
+        <span className="text-xs font-black tracking-widest text-blue-600 bg-blue-50 px-3.5 py-1.5 rounded-full border border-blue-100 shadow-sm inline-block uppercase font-mono">
           Engagement Models
         </span>
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-100 tracking-tight leading-tight">
+        <h1 className="text-4xl sm:text-5xl font-black text-slate-900 font-outfit tracking-tight leading-tight">
           Flexible Pricing & Team Packages
         </h1>
-        <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
+        <p className="text-slate-500 text-sm sm:text-base leading-relaxed font-medium">
           Select a structural model that aligns with your product timeline, engineering capacity, and project constraints.
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+      <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto pt-6 text-left">
         {tiers.map((tier) => (
           <div 
             key={tier.name}
-            className={`relative p-8 rounded-2xl glass-card flex flex-col justify-between space-y-6 ${
-              tier.popular ? "border-primary/50 shadow-lg shadow-primary/5 bg-white/[0.01]" : ""
+            className={`relative p-8 rounded-2xl bg-white border border-slate-200/80 shadow-md flex flex-col justify-between space-y-6 overflow-hidden ${
+              tier.popular ? "border-blue-600 ring-2 ring-blue-600/10 shadow-xl" : ""
             }`}
           >
             {tier.popular && (
-              <span className="absolute -top-3.5 left-6 px-3 py-1 rounded-full text-[10px] font-black tracking-widest text-[#030308] bg-primary uppercase">
+              <span className="absolute -top-3.5 left-6 px-3 py-1 rounded-full text-[9px] font-black tracking-widest text-white bg-blue-600 uppercase font-mono">
                 Highly Recommended
               </span>
             )}
             
-            <div className="space-y-4">
-              <h3 className="text-lg font-bold text-slate-100">{tier.name}</h3>
-              <div className="text-2xl font-black text-primary tracking-tight">{tier.price}</div>
-              <p className="text-xs text-slate-400 leading-relaxed">{tier.desc}</p>
+            <div className="space-y-4 relative z-10">
+              <h3 className="text-lg font-extrabold text-slate-900 tracking-tight">{tier.name}</h3>
+              <div className="text-2xl font-black text-blue-600 tracking-tight font-outfit">{tier.price}</div>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed">{tier.desc}</p>
               
-              <ul className="space-y-3 pt-6 border-t border-[#1e2038]/60">
+              <ul className="space-y-3 pt-6 border-t border-slate-100">
                 {tier.features.map((f) => (
-                  <li key={f} className="text-xs text-slate-300 flex items-center">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary mr-2.5"></span>
+                  <li key={f} className="text-xs text-slate-600 font-medium flex items-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mr-2.5 flex-shrink-0"></span>
                     <span>{f}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className="pt-6 border-t border-[#1e2038]/40">
+            <div className="pt-6 border-t border-slate-100 relative z-10">
               <Link
                 href="/contact"
-                className={`flex items-center justify-center w-full py-3.5 rounded-xl font-bold text-sm transition-all text-center ${
+                className={`flex items-center justify-center w-full py-3 rounded-xl font-extrabold text-xs transition-all text-center uppercase tracking-wider ${
                   tier.popular
-                    ? "text-[#030308] bg-gradient-to-r from-primary to-[#4FACFE] hover:opacity-95"
-                    : "text-slate-200 bg-[#0c0d22] border border-[#1e2038] hover:border-slate-500"
+                    ? "text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/15"
+                    : "text-slate-700 bg-slate-50 border border-slate-200 hover:bg-slate-100/50 hover:border-slate-350"
                 }`}
               >
                 Arrange Alignment Call

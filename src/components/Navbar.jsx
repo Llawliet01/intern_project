@@ -87,11 +87,9 @@ export default function Navbar() {
       title: "Company",
       dropdown: [
         { name: "Careers", href: "/careers", desc: "Join our global remote-first engineering crew", icon: Briefcase },
-        { name: "Partners & Ecosystem", href: "/partners", desc: "Integrate into our partner network", icon: Users },
         { name: "Security Center", href: "/security", desc: "Our global security trust parameters", icon: Lock },
         { name: "Compliance Standards", href: "/compliance", desc: "Certified operations and certifications", icon: ShieldCheck },
         { name: "FAQ", href: "/faq", desc: "Frequently asked questions", icon: HelpCircle },
-        { name: "Pricing Models", href: "/pricing", desc: "Flexible engagement contract packages", icon: CreditCard },
         { name: "Case Studies", href: "/case-studies", desc: "Read our real-world success results", icon: BarChart3 }
       ]
     }
@@ -605,17 +603,7 @@ export default function Navbar() {
                 <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-primary" />
               )}
             </Link>
-            <Link 
-              href="/contact" 
-              className={`px-4 py-2 text-sm font-semibold transition-colors rounded-lg hover:bg-slate-50 relative ${
-                pathname === "/contact" ? "text-primary" : "text-slate-700 hover:text-primary"
-              }`}
-            >
-              <span>Contact</span>
-              {pathname === "/contact" && (
-                <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-primary" />
-              )}
-            </Link>
+
           </div>
 
           {/* Action Button */}
@@ -624,7 +612,7 @@ export default function Navbar() {
               href="/contact" 
               className="inline-flex items-center justify-center px-6 py-2.5 rounded-full text-sm font-bold text-white bg-gradient-to-r from-[#2C5EAD] to-[#1591DC] hover:opacity-90 hover:shadow-lg hover:shadow-primary/20 transition-all glow-btn"
             >
-              Get a Demo
+              Contact Us
             </Link>
           </div>
 
@@ -707,14 +695,7 @@ export default function Navbar() {
                   >
                     <span>About Us</span>
                   </Link>
-                  <Link
-                    href="/contact"
-                    className={`flex items-center px-3 py-2.5 rounded-xl transition-all text-sm font-semibold ${
-                      pathname === "/contact" ? "bg-slate-50 text-primary" : "text-slate-700 hover:bg-slate-50 hover:text-primary"
-                    }`}
-                  >
-                    <span>Contact</span>
-                  </Link>
+
                 </div>
               </div>
 
@@ -723,7 +704,7 @@ export default function Navbar() {
                   href="/contact"
                   className="flex items-center justify-center w-full py-3.5 rounded-full font-bold text-white bg-gradient-to-r from-[#2C5EAD] to-[#1591DC] hover:opacity-95 text-center shadow-md shadow-primary/10"
                 >
-                  Get a Demo
+                  Contact Us
                 </Link>
               </div>
             </motion.div>

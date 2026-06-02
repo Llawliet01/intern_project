@@ -3,14 +3,18 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { motion, useScroll, useTransform, useSpring, useMotionValueEvent } from "framer-motion";
 import { 
   Code, Cpu, Settings, Terminal, UserCheck, 
   Activity, Lock, Database, Sparkles, ArrowRight,
-  Zap, ShieldCheck, CreditCard, Heart, Cloud, ShoppingCart, DollarSign, Star, Award, Check, Quote
+  Zap, ShieldCheck, CreditCard, Heart, Cloud, ShoppingCart, DollarSign, Star, Award, Check, Quote,
+  Play, Globe, Users, Rocket, Clock
 } from "lucide-react";
 import { servicesData, blogData, solutionsData } from "@/data/siteData";
+
+const ThreeDHero = dynamic(() => import("@/components/ThreeDHero"), { ssr: false });
 
 const gridPositions = [
   // Row 1
@@ -124,10 +128,6 @@ function Carousel3dCard({ slug, data, index, scrollYProgress, isActive, onCardCl
   // Smoothly interpolate styling values based on distance from the front
   const scale = useTransform(distanceVal, [0, 1, 2, 3], [1.05, 0.82, 0.68, 0.58]);
   const opacity = useTransform(distanceVal, [0, 1, 2, 3], [1, 0.75, 0.3, 0.12]);
-  
-  // Depth of field blur filter
-  const blurVal = useTransform(distanceVal, [0, 1, 2, 3], [0, 1.5, 3.5, 6]);
-  const filter = useTransform(blurVal, (v) => `blur(${v}px)`);
 
   const angle = index * 45;
 
@@ -144,8 +144,7 @@ function Carousel3dCard({ slug, data, index, scrollYProgress, isActive, onCardCl
         style={{
           scale,
           opacity,
-          filter,
-          willChange: "transform, opacity, filter",
+          willChange: "transform, opacity",
           "--hover-glow": meta.hoverGlow,
           "--hover-border": meta.hoverBorder
         }}
@@ -216,57 +215,66 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    let scheduledAnimationFrame = false;
+
     const handleScroll = () => {
-      const card1 = document.getElementById("step-card-1");
-      const card2 = document.getElementById("step-card-2");
-      const card3 = document.getElementById("step-card-3");
-      if (!card1 || !card2 || !card3) return;
+      if (scheduledAnimationFrame) return;
+      scheduledAnimationFrame = true;
 
-      if (window.innerWidth <= 768) {
-        [card1, card2, card3].forEach((card) => {
-          card.classList.remove("stacked-under-1", "stacked-under-2", "active-focus");
-        });
-        return;
-      }
+      requestAnimationFrame(() => {
+        scheduledAnimationFrame = false;
 
-      // Base sticky offset from CSS
-      const cardHeight = 400;
-      const topOffset = 170;
-      const visibleHeight = cardHeight * 0.1; // 40px
+        const card1 = document.getElementById("step-card-1");
+        const card2 = document.getElementById("step-card-2");
+        const card3 = document.getElementById("step-card-3");
+        if (!card1 || !card2 || !card3) return;
 
-      const offsets = {
-        top1: topOffset,
-        top2: topOffset + visibleHeight,
-        top3: topOffset + (visibleHeight * 2)
-      };
+        if (window.innerWidth <= 768) {
+          [card1, card2, card3].forEach((card) => {
+            card.classList.remove("stacked-under-1", "stacked-under-2", "active-focus");
+          });
+          return;
+        }
 
-      const rect1 = card1.getBoundingClientRect();
-      const rect2 = card2.getBoundingClientRect();
-      const rect3 = card3.getBoundingClientRect();
+        // Base sticky offset from CSS
+        const cardHeight = 400;
+        const topOffset = 170;
+        const visibleHeight = cardHeight * 0.1; // 40px
 
-      const tolerance = 3;
+        const offsets = {
+          top1: topOffset,
+          top2: topOffset + visibleHeight,
+          top3: topOffset + (visibleHeight * 2)
+        };
 
-      const isCard1Stuck = rect1.top <= offsets.top1 + tolerance;
-      const isCard2Stuck = rect2.top <= offsets.top2 + tolerance;
-      const isCard3Stuck = rect3.top <= offsets.top3 + tolerance;
+        const rect1 = card1.getBoundingClientRect();
+        const rect2 = card2.getBoundingClientRect();
+        const rect3 = card3.getBoundingClientRect();
 
-      card1.classList.remove("stacked-under-1", "stacked-under-2", "active-focus");
-      card2.classList.remove("stacked-under-1", "stacked-under-2", "active-focus");
-      card3.classList.remove("stacked-under-1", "stacked-under-2", "active-focus");
+        const tolerance = 3;
 
-      if (isCard3Stuck) {
-        card1.classList.add("stacked-under-1");
-        card2.classList.add("stacked-under-2");
-        card3.classList.add("active-focus");
-      } else if (isCard2Stuck) {
-        card1.classList.add("stacked-under-2");
-        card2.classList.add("active-focus");
-      } else if (isCard1Stuck) {
-        card1.classList.add("active-focus");
-      }
+        const isCard1Stuck = rect1.top <= offsets.top1 + tolerance;
+        const isCard2Stuck = rect2.top <= offsets.top2 + tolerance;
+        const isCard3Stuck = rect3.top <= offsets.top3 + tolerance;
+
+        card1.classList.remove("stacked-under-1", "stacked-under-2", "active-focus");
+        card2.classList.remove("stacked-under-1", "stacked-under-2", "active-focus");
+        card3.classList.remove("stacked-under-1", "stacked-under-2", "active-focus");
+
+        if (isCard3Stuck) {
+          card1.classList.add("stacked-under-1");
+          card2.classList.add("stacked-under-2");
+          card3.classList.add("active-focus");
+        } else if (isCard2Stuck) {
+          card1.classList.add("stacked-under-2");
+          card2.classList.add("active-focus");
+        } else if (isCard1Stuck) {
+          card1.classList.add("active-focus");
+        }
+      });
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("resize", handleScroll);
     handleScroll();
 
@@ -300,7 +308,7 @@ export default function Home() {
         { type: "normal", text: "}" }
       ]
     },
-    "cicd-regulated-environments": {
+    "shift-security-left": {
       branch: "security",
       branchName: "sec/pipeline-audit",
       branchColor: "#2dd4bf",
@@ -318,7 +326,7 @@ export default function Home() {
         { type: "addition", text: "+     - semgrep --config auto" }
       ]
     },
-    "designing-scalable-apis": {
+    "kubernetes-resource-optimization": {
       branch: "dev",
       branchName: "dev/api-caching",
       branchColor: "#38bdf8",
@@ -653,11 +661,25 @@ export default function Home() {
       {/* Grid background overlay */}
       <div className="absolute inset-0 grid-pattern opacity-[0.4] pointer-events-none -z-20"></div>
 
-      {/* Hero Section Gradient background glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-gradient-to-br from-[#2C5EAD] via-[#1591DC] to-[#4BB8FA] opacity-[0.08] rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse-slow"></div>
+      {/* Hero Section Container (Full-width wrapper to support full-bleed background image) */}
+      <div className="relative w-full overflow-hidden border-b border-slate-200/60 bg-slate-50">
+        
+        {/* Full-bleed Background Image */}
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
+          <Image 
+            src="/assets/images/futuristic_city_bg.jpg"
+            alt="Futuristic digital city background Aetheris Core"
+            fill
+            priority
+            className="object-cover object-right opacity-35 sm:opacity-55 lg:opacity-100"
+          />
+          {/* Gradients to blend into slate-50 background on left and bottom */}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-50 via-slate-50/80 to-transparent z-10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-transparent to-transparent z-10" />
+        </div>
 
-      {/* 1. Hero Section (White/Light Slate Alternate) */}
-      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+        {/* 1. Hero Section (White/Light Slate Alternate) */}
+        <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 z-10">
         {/* We use a grid system that divides the space into 12 cols on desktop */}
         <div className="grid lg:grid-cols-12 gap-12 items-center">
           
@@ -668,12 +690,12 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="lg:col-span-7 space-y-6 flex flex-col items-center lg:items-start text-center lg:text-left"
           >
-            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#C4E2F5]/30 border border-[#C4E2F5] text-xs font-bold text-primary">
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#C4E2F5]/30 border border-[#C4E2F5]/50 text-xs font-bold text-[#2C5EAD]">
               <Sparkles className="w-4 h-4 text-[#1591DC]" />
               <span>Orchestrating Next-Generation Digital Architectures</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-[1.15] tracking-tight text-slate-900">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-[1.1] tracking-tight text-slate-900">
               AETHERIS SYSTEMS <br />
               <span className="bg-gradient-to-r from-[#2C5EAD] via-[#1591DC] to-[#4BB8FA] bg-clip-text text-transparent">IT Solutions Engineered for Impact</span>
             </h1>
@@ -692,230 +714,108 @@ export default function Home() {
               </Link>
               <Link 
                 href="/case-studies" 
-                className="flex items-center justify-center w-full sm:w-auto px-8 py-3.5 rounded-full font-bold text-primary bg-white border border-[#2C5EAD]/30 hover:bg-slate-50 transition-all text-sm shadow-sm"
+                className="flex items-center justify-center w-full sm:w-auto px-8 py-3.5 rounded-full font-bold text-[#2C5EAD] bg-white border border-[#2C5EAD]/30 hover:bg-slate-50 hover:scale-102 transition-all text-sm shadow-sm"
               >
+                <div className="w-5 h-5 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center mr-2">
+                  <Play className="w-2.5 h-2.5 text-[#2C5EAD] fill-[#2C5EAD]" />
+                </div>
                 View Case Studies
               </Link>
             </div>
 
-            {/* Space-efficient Trust metrics to fill left-side whitespace */}
+            {/* Trust metrics row to match image mockup */}
             <div className="pt-8 border-t border-slate-200/60 w-full grid grid-cols-3 gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-emerald-50 text-emerald-500 border border-emerald-100 flex items-center justify-center">
-                  <Check className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-500 border border-emerald-100 flex items-center justify-center flex-shrink-0 shadow-inner">
+                  <ShieldCheck className="w-5 h-5" />
                 </div>
-                <div>
-                  <span className="text-[10px] font-mono text-slate-400 block uppercase tracking-wider font-bold leading-none mb-1">compliance</span>
-                  <span className="text-xs font-bold text-slate-800">SOC2 Ready</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-blue-50 text-blue-500 border border-blue-100 flex items-center justify-center">
-                  <Check className="w-3.5 h-3.5" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-mono text-slate-400 block uppercase tracking-wider font-bold leading-none mb-1">uptime SLA</span>
-                  <span className="text-xs font-bold text-slate-800">99.99% SLA</span>
+                <div className="text-left">
+                  <span className="text-[10px] font-mono text-slate-800 block font-bold leading-none mb-1">SOC 2 Ready</span>
+                  <span className="text-[9px] font-medium text-slate-400">Compliance</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-purple-50 text-purple-500 border border-purple-100 flex items-center justify-center">
-                  <Check className="w-3.5 h-3.5" />
+              
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-500 border border-blue-100 flex items-center justify-center flex-shrink-0 shadow-inner">
+                  <Clock className="w-5 h-5" />
                 </div>
-                <div>
-                  <span className="text-[10px] font-mono text-slate-400 block uppercase tracking-wider font-bold leading-none mb-1">sre team</span>
-                  <span className="text-xs font-bold text-slate-800">24/7 Monitoring</span>
+                <div className="text-left">
+                  <span className="text-[10px] font-mono text-slate-800 block font-bold leading-none mb-1">99.99% SLA</span>
+                  <span className="text-[9px] font-medium text-slate-400">Uptime</span>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-500 border border-purple-100 flex items-center justify-center flex-shrink-0 shadow-inner">
+                  <Activity className="w-5 h-5" />
+                </div>
+                <div className="text-left">
+                  <span className="text-[10px] font-mono text-slate-800 block font-bold leading-none mb-1">24/7 Monitoring</span>
+                  <span className="text-[9px] font-medium text-slate-400">SRE Team</span>
                 </div>
               </div>
             </div>
           </motion.div>
           
-          {/* Right Column: 3D Hologram Deck or Mobile Fallback (lg:col-span-5) */}
-          <div className="lg:col-span-5 flex justify-center items-center relative w-full">
-            {/* Mobile Fallback: Static Mockup Image */}
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="block lg:hidden w-full max-w-lg relative rounded-xl border border-slate-200 shadow-[0_0_20px_rgba(75,184,250,0.1)] overflow-hidden bg-white aspect-[16/10] select-none"
-            >
-              <Image 
-                src="/assets/images/hero_dashboard.png"
-                alt="Aetheris Systems Core Operations Dashboard Mockup"
-                fill
-                priority
-                sizes="(max-width: 768px) 100vw, 500px"
-                className="object-cover opacity-95"
-              />
-            </motion.div>
-
-            {/* Desktop 3D Hologram Deck */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="hidden lg:block w-full h-[480px] relative select-none"
-            >
-              <div 
-                ref={stageRef}
-                onMouseMove={handleMouseMove}
-                onMouseLeave={handleMouseLeave}
-                className="w-full h-full hologram-stage flex items-center justify-center"
-              >
-                {/* Resized deck to fit the right column spacing perfectly (w-420 h-280) */}
-                <div 
-                  style={tiltStyle}
-                  className="w-[420px] h-[280px] relative hologram-deck transition-transform duration-300 ease-out"
-                >
-                  {/* 3D Vertical data-packets flowing upwards */}
-                  <div className="absolute left-[20%] top-[30%] w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_10px_#22d3ee] hologram-data-packet" style={{ animationDelay: "0s" }} />
-                  <div className="absolute left-[70%] top-[40%] w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_10px_#60a5fa] hologram-data-packet" style={{ animationDelay: "0.7s" }} />
-                  <div className="absolute left-[45%] top-[70%] w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399] hologram-data-packet" style={{ animationDelay: "1.4s" }} />
-
-                  {/* Layer 1: Infrastructure Dashboard (Bottom Level, Z = 0) */}
-                  <div className="w-full h-full rounded-3xl bg-slate-950/90 border border-slate-800 p-5 flex flex-col justify-between text-left translate-z-base holo-glow-blue transition-all duration-300">
-                    <div className="flex justify-between items-center border-b border-slate-900 pb-2">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                        <span className="text-[8px] font-mono font-bold text-slate-400 tracking-wider">AWS CLOUD CLUSTER // MAIN</span>
-                      </div>
-                      <span className="text-[8px] font-mono text-slate-500">US-EAST-1</span>
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-2.5 py-2">
-                      <div className="space-y-0.5">
-                        <span className="text-[8px] font-mono text-slate-500 block uppercase">Uptime</span>
-                        <span className="text-sm font-black text-white font-mono">99.998%</span>
-                      </div>
-                      <div className="space-y-0.5">
-                        <span className="text-[8px] font-mono text-slate-500 block uppercase">Cpu</span>
-                        <span className="text-sm font-black text-blue-400 font-mono">24.2%</span>
-                      </div>
-                      <div className="space-y-0.5">
-                        <span className="text-[8px] font-mono text-slate-500 block uppercase">Nodes</span>
-                        <span className="text-sm font-black text-white font-mono">148/150</span>
-                      </div>
-                    </div>
-
-                    <div className="flex-1 flex items-end">
-                      <div className="w-full h-10 relative opacity-60">
-                        {/* Looping SVG Spline line chart */}
-                        <svg viewBox="0 0 400 50" className="w-full h-full">
-                          <path 
-                            d="M0,35 Q30,10 60,30 T120,20 T180,40 T240,15 T300,30 T360,10 T400,25" 
-                            fill="none" 
-                            stroke="#3b82f6" 
-                            strokeWidth="2.5" 
-                            strokeLinecap="round" 
-                          />
-                          <path 
-                            d="M0,35 Q30,10 60,30 T120,20 T180,40 T240,15 T300,30 T360,10 T400,25 L400,50 L0,50 Z" 
-                            fill="url(#infra-grad-2)" 
-                            opacity="0.15" 
-                          />
-                          <defs>
-                            <linearGradient id="infra-grad-2" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#3b82f6" />
-                              <stop offset="100%" stopColor="transparent" />
-                            </linearGradient>
-                          </defs>
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Layer 2: API Request Monitor (Middle Level, Z = 55) */}
-                  <div className="w-full h-full rounded-3xl bg-[#090d16]/90 border border-cyan-500/20 p-5 flex flex-col justify-between text-left absolute inset-0 translate-z-mid holo-glow-cyan transition-all duration-300">
-                    <div className="flex justify-between items-center border-b border-slate-900 pb-2">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                        <span className="text-[8px] font-mono font-bold text-slate-400 tracking-wider">KONG ENTERPRISE API GATEWAY</span>
-                      </div>
-                      <span className="text-[8px] font-mono text-cyan-400 font-bold">LIVE</span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2.5 py-1">
-                      <div className="p-2 bg-slate-950/50 border border-slate-800/80 rounded-xl flex items-center justify-between">
-                        <div>
-                          <span className="text-[7px] font-mono text-slate-500 block uppercase">Request Load</span>
-                          <span className="text-xs font-black text-white font-mono">18.4K <span className="text-[8px] font-normal text-slate-400">req/s</span></span>
-                        </div>
-                        <Database className="w-3.5 h-3.5 text-cyan-400" />
-                      </div>
-                      <div className="p-2 bg-slate-950/50 border border-slate-800/80 rounded-xl flex items-center justify-between">
-                        <div>
-                          <span className="text-[7px] font-mono text-slate-500 block uppercase">Latency</span>
-                          <span className="text-xs font-black text-cyan-400 font-mono">42 <span className="text-[8px] font-normal text-slate-400">ms</span></span>
-                        </div>
-                        <Cpu className="w-3.5 h-3.5 text-cyan-400" />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-3 pt-1">
-                      <span className="text-[7px] font-mono text-slate-500 uppercase">Distribution:</span>
-                      <div className="flex-1 flex gap-1 h-5 items-end justify-end">
-                        {[35, 60, 45, 90, 70, 40, 85, 55, 95, 30].map((h, i) => (
-                          <div 
-                            key={i} 
-                            className="w-2 bg-gradient-to-t from-cyan-600 to-cyan-400 rounded-t-sm"
-                            style={{ height: `${h}%` }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Layer 3: Cloudflare Firewall Gate (Top Level, Z = 110) */}
-                  <div className="w-full h-full rounded-3xl bg-[#060a10]/90 border border-emerald-500/30 p-5 flex flex-col justify-between text-left absolute inset-0 translate-z-top holo-glow-emerald transition-all duration-300">
-                    <div className="flex justify-between items-center border-b border-slate-900 pb-2">
-                      <div className="flex items-center gap-1.5">
-                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                        <span className="text-[8px] font-mono font-bold text-slate-400 tracking-wider">AETHERIS COMPLIANCE VAULT</span>
-                      </div>
-                      <div className="px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[7px] font-mono font-bold text-emerald-400 select-none">
-                        WAF
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5 py-1.5 flex-1 flex flex-col justify-center">
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-slate-400 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                          SSL/TLS Verification
-                        </span>
-                        <span className="font-mono text-emerald-400 font-bold text-[10px]">SECURE (TLS 1.3)</span>
-                      </div>
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-slate-400 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                          SOC2 Compliance Gate
-                        </span>
-                        <span className="font-mono text-emerald-400 font-bold text-[10px]">VERIFIED</span>
-                      </div>
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-slate-400 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                          Vulnerabilities
-                        </span>
-                        <span className="font-mono text-emerald-400 font-bold text-[10px]">0 DETECTED</span>
-                      </div>
-                    </div>
-
-                    <div className="bg-slate-950/80 border border-slate-900/60 rounded-xl p-2 flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <Terminal className="w-3 h-3 text-emerald-400" />
-                        <span className="text-[8px] font-mono text-slate-500">auditing log_vault...</span>
-                      </div>
-                      <span className="text-[8px] font-mono text-slate-400 font-bold">OK // 200</span>
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-            </motion.div>
+          {/* Right Column: 3D Hologram WebGL Scene (lg:col-span-5) */}
+          <div className="lg:col-span-5 flex justify-center items-center w-full relative">
+            <ThreeDHero />
           </div>
         </div>
+
+        {/* Bottom Horizontal Stats Bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="mt-16 sm:mt-24 p-6 sm:p-8 bg-white/80 backdrop-blur-md border border-slate-200/80 rounded-3xl shadow-[0_12px_36px_rgba(0,0,0,0.02)] grid grid-cols-2 lg:grid-cols-4 gap-6 items-center w-full"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#2C5EAD] border border-blue-100 flex items-center justify-center flex-shrink-0 shadow-inner">
+              <Rocket className="w-6 h-6" />
+            </div>
+            <div className="text-left">
+              <span className="text-2xl font-black text-[#2c5ead] font-mono leading-none block">150+</span>
+              <span className="text-[10px] font-bold text-slate-800 block uppercase tracking-wider mt-0.5">Successful Deployments</span>
+              <span className="text-[9px] font-medium text-slate-400 block mt-0.5">Across Industries</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#2C5EAD] border border-blue-100 flex items-center justify-center flex-shrink-0 shadow-inner">
+              <Globe className="w-6 h-6" />
+            </div>
+            <div className="text-left">
+              <span className="text-2xl font-black text-[#2c5ead] font-mono leading-none block">25+</span>
+              <span className="text-[10px] font-bold text-slate-800 block uppercase tracking-wider mt-0.5">Countries Served</span>
+              <span className="text-[9px] font-medium text-slate-400 block mt-0.5">Globally</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#2C5EAD] border border-blue-100 flex items-center justify-center flex-shrink-0 shadow-inner">
+              <Users className="w-6 h-6" />
+            </div>
+            <div className="text-left">
+              <span className="text-2xl font-black text-[#2c5ead] font-mono leading-none block">500+</span>
+              <span className="text-[10px] font-bold text-slate-800 block uppercase tracking-wider mt-0.5">Enterprise Clients</span>
+              <span className="text-[9px] font-medium text-slate-400 block mt-0.5">Trust Us</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#2C5EAD] border border-blue-100 flex items-center justify-center flex-shrink-0 shadow-inner">
+              <Award className="w-6 h-6" />
+            </div>
+            <div className="text-left">
+              <span className="text-2xl font-black text-[#2c5ead] font-mono leading-none block">10+</span>
+              <span className="text-[10px] font-bold text-slate-800 block uppercase tracking-wider mt-0.5">Years of Engineering</span>
+              <span className="text-[9px] font-medium text-slate-400 block mt-0.5">Excellence</span>
+            </div>
+          </div>
+        </motion.div>
       </section>
+    </div>
 
       {/* 2. About Intro Section (Light Blue Alternate Background) */}
       <section className="relative border-y border-slate-200/60 bg-gradient-to-b from-[#e8eff6] via-[#edf3f8] to-[#dbe6f2] py-20">
@@ -2359,7 +2259,7 @@ export default function Home() {
                       stroke="#38bdf8" 
                       strokeWidth="4" 
                       strokeLinecap="round" 
-                      className={`transition-opacity duration-300 ${(activeInsightSlug === "designing-scalable-apis" || hoveredInsightSlug === "designing-scalable-apis") ? "opacity-100" : "opacity-0"}`}
+                      className={`transition-opacity duration-300 ${(activeInsightSlug === "kubernetes-resource-optimization" || hoveredInsightSlug === "kubernetes-resource-optimization") ? "opacity-100" : "opacity-0"}`}
                       filter="url(#glow-dev)"
                     />
                     
@@ -2379,7 +2279,7 @@ export default function Home() {
                       stroke="#2dd4bf" 
                       strokeWidth="4" 
                       strokeLinecap="round" 
-                      className={`transition-opacity duration-300 ${(activeInsightSlug === "cicd-regulated-environments" || hoveredInsightSlug === "cicd-regulated-environments") ? "opacity-100" : "opacity-0"}`}
+                      className={`transition-opacity duration-300 ${(activeInsightSlug === "shift-security-left" || hoveredInsightSlug === "shift-security-left") ? "opacity-100" : "opacity-0"}`}
                       filter="url(#glow-security)"
                     />
 
@@ -2391,7 +2291,7 @@ export default function Home() {
                       strokeWidth="2" 
                       strokeLinecap="round" 
                       strokeDasharray="10 30"
-                      className={`git-running-light transition-opacity duration-300 ${(activeInsightSlug === "designing-scalable-apis" || hoveredInsightSlug === "designing-scalable-apis") ? "opacity-100" : "opacity-0"}`}
+                      className={`git-running-light transition-opacity duration-300 ${(activeInsightSlug === "kubernetes-resource-optimization" || hoveredInsightSlug === "kubernetes-resource-optimization") ? "opacity-100" : "opacity-0"}`}
                     />
                     <path 
                       d="M 160,60 C 110,60 60,90 60,130 L 60,210 C 60,250 110,280 160,280" 
@@ -2409,7 +2309,7 @@ export default function Home() {
                       strokeWidth="2" 
                       strokeLinecap="round" 
                       strokeDasharray="10 30"
-                      className={`git-running-light transition-opacity duration-300 ${(activeInsightSlug === "cicd-regulated-environments" || hoveredInsightSlug === "cicd-regulated-environments") ? "opacity-100" : "opacity-0"}`}
+                      className={`git-running-light transition-opacity duration-300 ${(activeInsightSlug === "shift-security-left" || hoveredInsightSlug === "shift-security-left") ? "opacity-100" : "opacity-0"}`}
                     />
 
                     {/* Commit nodes */}
@@ -2456,8 +2356,8 @@ export default function Home() {
                     {/* 3. Security Commit Node */}
                     <g 
                       className="cursor-pointer group/node"
-                      onClick={() => setActiveInsightSlug("cicd-regulated-environments")}
-                      onMouseEnter={() => setHoveredInsightSlug("cicd-regulated-environments")}
+                      onClick={() => setActiveInsightSlug("shift-security-left")}
+                      onMouseEnter={() => setHoveredInsightSlug("shift-security-left")}
                       onMouseLeave={() => setHoveredInsightSlug(null)}
                     >
                       <circle 
@@ -2465,7 +2365,7 @@ export default function Home() {
                         cy="220" 
                         r="10" 
                         className={`fill-none stroke-2 transition-all duration-300 ${
-                          activeInsightSlug === "cicd-regulated-environments" ? "animate-pulse-sec" : "stroke-slate-800 group-hover/node:stroke-teal-500/50"
+                          activeInsightSlug === "shift-security-left" ? "animate-pulse-sec" : "stroke-slate-800 group-hover/node:stroke-teal-500/50"
                         }`}
                       />
                       <circle 
@@ -2473,7 +2373,7 @@ export default function Home() {
                         cy="220" 
                         r="5" 
                         className={`transition-all duration-300 ${
-                          activeInsightSlug === "cicd-regulated-environments" ? "fill-teal-400 stroke-teal-200 stroke-2" : "fill-slate-950 stroke-slate-600 group-hover/node:fill-teal-500/80 group-hover/node:stroke-teal-300"
+                          activeInsightSlug === "shift-security-left" ? "fill-teal-400 stroke-teal-200 stroke-2" : "fill-slate-950 stroke-slate-600 group-hover/node:fill-teal-500/80 group-hover/node:stroke-teal-300"
                         }`}
                       />
                       <text 
@@ -2481,7 +2381,7 @@ export default function Home() {
                         y="223" 
                         textAnchor="end"
                         className={`text-[10px] font-mono transition-colors duration-300 select-none ${
-                          activeInsightSlug === "cicd-regulated-environments" ? "fill-teal-400 font-bold" : "fill-slate-600 group-hover/node:fill-slate-300"
+                          activeInsightSlug === "shift-security-left" ? "fill-teal-400 font-bold" : "fill-slate-600 group-hover/node:fill-slate-300"
                         }`}
                       >
                         e3d9f2a
@@ -2491,8 +2391,8 @@ export default function Home() {
                     {/* 4. Dev Commit Node */}
                     <g 
                       className="cursor-pointer group/node"
-                      onClick={() => setActiveInsightSlug("designing-scalable-apis")}
-                      onMouseEnter={() => setHoveredInsightSlug("designing-scalable-apis")}
+                      onClick={() => setActiveInsightSlug("kubernetes-resource-optimization")}
+                      onMouseEnter={() => setHoveredInsightSlug("kubernetes-resource-optimization")}
                       onMouseLeave={() => setHoveredInsightSlug(null)}
                     >
                       <circle 
@@ -2500,7 +2400,7 @@ export default function Home() {
                         cy="360" 
                         r="10" 
                         className={`fill-none stroke-2 transition-all duration-300 ${
-                          activeInsightSlug === "designing-scalable-apis" ? "animate-pulse-dev" : "stroke-slate-800 group-hover/node:stroke-sky-500/50"
+                          activeInsightSlug === "kubernetes-resource-optimization" ? "animate-pulse-dev" : "stroke-slate-800 group-hover/node:stroke-sky-500/50"
                         }`}
                       />
                       <circle 
@@ -2508,14 +2408,14 @@ export default function Home() {
                         cy="360" 
                         r="5" 
                         className={`transition-all duration-300 ${
-                          activeInsightSlug === "designing-scalable-apis" ? "fill-sky-400 stroke-sky-200 stroke-2" : "fill-slate-950 stroke-slate-600 group-hover/node:fill-sky-500/80 group-hover/node:stroke-sky-300"
+                          activeInsightSlug === "kubernetes-resource-optimization" ? "fill-sky-400 stroke-sky-200 stroke-2" : "fill-slate-950 stroke-slate-600 group-hover/node:fill-sky-500/80 group-hover/node:stroke-sky-300"
                         }`}
                       />
                       <text 
                         x="176" 
                         y="363" 
                         className={`text-[10px] font-mono transition-colors duration-300 select-none ${
-                          activeInsightSlug === "designing-scalable-apis" ? "fill-sky-400 font-bold" : "fill-slate-600 group-hover/node:fill-slate-300"
+                          activeInsightSlug === "kubernetes-resource-optimization" ? "fill-sky-400 font-bold" : "fill-slate-600 group-hover/node:fill-slate-300"
                         }`}
                       >
                         b2a5f7c
