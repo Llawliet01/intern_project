@@ -422,7 +422,7 @@ export default function BlogPostClient({ post, slug, allBlogs }) {
         </aside>
 
         {/* ================= CENTER MAIN ARTICLE ================= */}
-        <main className="col-span-1 lg:col-span-6 space-y-12 min-w-0">
+        <main className="col-span-1 lg:col-span-9 space-y-12 min-w-0">
           
           {/* Article Header block */}
           <div className="space-y-6">
@@ -708,88 +708,7 @@ export default function BlogPostClient({ post, slug, allBlogs }) {
 
         </main>
 
-        {/* ================= RIGHT SIDEBAR ================= */}
-        <aside className="hidden lg:block lg:col-span-3 space-y-8 sticky top-12 self-start h-[calc(100vh-100px)] overflow-y-auto pr-2 scrollbar-thin">
-          
-          {/* Share Article Widget */}
-          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
-            <h4 className="text-[10px] font-black tracking-widest text-slate-400 uppercase border-b border-slate-100 pb-2 text-center">
-              Share This Article
-            </h4>
-            <div className="flex justify-around items-center gap-2">
-              <button 
-                onClick={handleCopyLink}
-                className="p-3 bg-slate-50 hover:bg-blue-50 hover:text-blue-600 rounded-xl border border-slate-200/60 transition-all text-slate-500 flex items-center justify-center relative"
-                title="Copy Link"
-              >
-                {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Link2 className="w-4 h-4" />}
-                {copied && (
-                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[8px] font-mono px-1.5 py-0.5 rounded shadow whitespace-nowrap">
-                    Copied!
-                  </span>
-                )}
-              </button>
-              <a 
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-3 bg-slate-50 hover:bg-blue-50 hover:text-blue-600 rounded-xl border border-slate-200/60 transition-all text-slate-500 flex items-center justify-center"
-                title="Share on Twitter"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z" />
-                </svg>
-              </a>
-              <a 
-                href={`https://www.linkedin.com/shareArticle?mini=true&title=${encodeURIComponent(post.title)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-3 bg-slate-50 hover:bg-blue-50 hover:text-blue-600 rounded-xl border border-slate-200/60 transition-all text-slate-500 flex items-center justify-center"
-                title="Share on LinkedIn"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
-                  <rect x="2" y="9" width="4" height="12" />
-                  <circle cx="4" cy="4" r="2" />
-                </svg>
-              </a>
-              <a 
-                href={`mailto:?subject=${encodeURIComponent(post.title)}`}
-                className="p-3 bg-slate-50 hover:bg-blue-50 hover:text-blue-600 rounded-xl border border-slate-200/60 transition-all text-slate-500 flex items-center justify-center"
-                title="Share via Email"
-              >
-                <Mail className="w-4 h-4" />
-              </a>
-            </div>
-          </div>
 
-          {/* Sticky updates widget */}
-          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
-            <h4 className="text-[10px] font-black tracking-widest text-slate-400 uppercase border-b border-slate-100 pb-2 text-center">
-              Never Miss An Update
-            </h4>
-            <p className="text-[11px] text-slate-500 leading-normal text-center">
-              Get the latest engineering insights and best practices.
-            </p>
-            <form onSubmit={handleSubscribe} className="space-y-3">
-              <input 
-                type="email" 
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email" 
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs text-slate-700"
-              />
-              <button 
-                type="submit"
-                className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase tracking-wider rounded-lg shadow-sm transition-all"
-              >
-                {subscribed ? "Subscribed" : "Subscribe"}
-              </button>
-            </form>
-          </div>
-
-        </aside>
 
       </div>
 
